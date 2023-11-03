@@ -13,6 +13,8 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2/github"
+	"golang.org/x/oauth2"
 )
 
 func main() {
@@ -26,9 +28,17 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
+	githubOauthConfig := &oauth2.Config{
+		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+		ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+		RedirectURL:  "http://localhost:8080/auth/callback",
+		Scopes:       []string{"user:email"},
+		Endpoint:     github.Endpoint,
+	}
+
   users_repo := repositories.NewUserRepo(db)
 
-  auth_handler := handlers.NewAuthHandler(logger, users_repo)
+  auth_handler := handlers.NewAuthHandler(logger, users_repo, githubOauthConfig)
 
   auth_handler.RegisterRoutes(r)
 
