@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"visio/models"
 	"visio/repositories"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
@@ -157,7 +156,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *AuthHandler) RegisterRoutes(r *chi.Mux) {
-	r.Get("/auth/request", h.RequestGithubAuth)
-	r.Get("/auth/callback", h.GithubAuth)
+func (h *AuthHandler) RegisterRoutes(r chi.Router) {
+	r.Get("/request", h.RequestGithubAuth)
+	r.Get("/callback", h.GithubAuth)
 }

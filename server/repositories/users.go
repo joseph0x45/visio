@@ -30,6 +30,12 @@ func (r UserRepo) GetByGithubId(id string) (user *models.User, err error){
   return
 }
 
+func (r UserRepo) GetById(id string) (user *models.User, err error){
+  user = new(models.User)
+  err = r.db.Get(user, "select * from users where id=$1", id)
+  return
+}
+
 func (r UserRepo) UpdateUserInfos(github_id , username , avatar , email string) error {
   _, err := r.db.Exec(
     "update users set username=$1, avatar=$2, email=$3 where github_id=$4",
