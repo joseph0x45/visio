@@ -22,6 +22,12 @@ func (r *Keys_repo) SelectKeys(user_id string) (keys []models.Key, err error) {
   return
 }
 
+func (r *Keys_repo) GetUserNumberOfKeys(user_id string) (count int, err error) {
+  count = 0
+  err = r.db.QueryRowx("select count(*) from keys where owner=$1", user_id).Scan(&count)
+  return
+}
+
 func (r *Keys_repo) InsertNewKey(key *models.Key) error {
   _, err := r.db.NamedExec(
     "insert into keys(id, owner, prefix, key_hash) values(:id, :owner, :prefix, :key_hash)",
