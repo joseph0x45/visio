@@ -18,13 +18,14 @@ func NewUserRepo(db *sqlx.DB) *UserRepo {
 
 func (r UserRepo) InsertNewUser(user *models.User) error {
   _, err := r.db.NamedExec(
-    "insert into users(id, username, email, avatar) values(:id, :username, :email, :avatar)",
+    "insert into users(id, github_id, username, email, avatar) values(:id, :github_id, :username, :email, :avatar)",
     &user,
   )
   return err
 }
 
 func (r UserRepo) GetByGithubId(id string) (user *models.User, err error){
+  user = new(models.User)
   err = r.db.Get(user, "select * from users where github_id=$1", id)
   return
 }

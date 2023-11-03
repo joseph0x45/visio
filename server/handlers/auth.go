@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"visio/models"
@@ -33,7 +34,6 @@ func NewAuthHandler(logger *logrus.Logger, repo *repositories.UserRepo, githubOa
 
 func (h *AuthHandler) RequestGithubAuth(w http.ResponseWriter, r *http.Request) {
 	url := h.githubOauth_config.AuthCodeURL("state", oauth2.SetAuthURLParam("client_id", h.githubOauth_config.ClientID))
-	println(url)
 	data, err := json.Marshal(
 		map[string]string{
 			"url": url,
@@ -92,14 +92,14 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	email, username, avatar, github_id := data["email"].(string), data["name"].(string), data["avatar_url"].(string), data["id"].(string)
-	existing_user, err := h.user_repo.GetByGithubId(github_id)
+	email, username, avatar, github_id := data["email"].(string), data["name"].(string), data["avatar_url"].(string), data["id"].(float64)
+	existing_user, err := h.user_repo.GetByGithubId(fmt.Sprintf("%.f", github_id))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			new_user_id := uuid.NewString()
 			var new_user = &models.User{
 				Id:       new_user_id,
-				GithubId: github_id,
+				GithubId: fmt.Sprintf("%.f", github_id),
 				Username: username,
 				Email:    email,
 				Avatar:   avatar,
@@ -125,14 +125,14 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 				Value: auth_token,
 				Path:  "/",
 			})
-			http.Redirect(w, r, "http://localhost:5173", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "http://localhost:5173/console", http.StatusTemporaryRedirect)
 			return
 		}
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = h.user_repo.UpdateUserInfos(github_id, username, avatar, email)
+	err = h.user_repo.UpdateUserInfos(fmt.Sprintf("%.f", github_id), username, avatar, email)
 	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -153,7 +153,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 		Value: auth_token,
 		Path:  "/",
 	})
-	http.Redirect(w, r, "http://localhost:5173", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "http://localhost:5173/console", http.StatusTemporaryRedirect)
 	return
 }
 
