@@ -9,12 +9,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 )
 
 func main() {
@@ -35,6 +36,8 @@ func main() {
 		Scopes:       []string{"user:email"},
 		Endpoint:     github.Endpoint,
 	}
+
+  tokenAuth := jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
 
   users_repo := repositories.NewUserRepo(db)
 

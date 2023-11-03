@@ -1,6 +1,10 @@
 package repositories
 
-import "github.com/jmoiron/sqlx"
+import (
+	"visio/models"
+
+	"github.com/jmoiron/sqlx"
+)
 
 type UserRepo struct {
   db *sqlx.DB
@@ -12,6 +16,26 @@ func NewUserRepo(db *sqlx.DB) *UserRepo {
   }
 }
 
-func (r UserRepo) Insert(username string){
-  r.db.Exec("somethihg")
+func (r UserRepo) InsertNewUser(user *models.User) error {
+  _, err := r.db.NamedExec(
+    "insert into users(id, username, email, avatar) values(:id, :username, :email, :avatar)",
+    &user,
+  )
+  return err
+}
+
+func (r UserRepo) GetByGithubId(id string) (user *models.User, err error){
+  err = r.db.Get(user, "select * from users where github_id=$1", id)
+  return
+}
+
+func (r UserRepo) UpdateUserInfos(github_id , username , avatar , email string) error {
+  _, err := r.db.Exec(
+    "update users set username=$1, avatar=$2, email=$3 where github_id=$4",
+    username,
+    avatar,
+    email,
+    github_id,
+  )
+  return err
 }
