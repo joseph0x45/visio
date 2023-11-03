@@ -41,7 +41,7 @@ func main() {
 
   users_repo := repositories.NewUserRepo(db)
 
-  auth_handler := handlers.NewAuthHandler(logger, users_repo, githubOauthConfig)
+  auth_handler := handlers.NewAuthHandler(logger, users_repo, githubOauthConfig, tokenAuth)
 
   auth_handler.RegisterRoutes(r)
 
