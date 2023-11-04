@@ -28,16 +28,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-  r := chi.NewRouter()
-  r.Use(middleware.Logger)
-  r.Use(cors.Handler(cors.Options{
-    AllowedOrigins:   []string{"https://*", "http://*"},
-    AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-    AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-    ExposedHeaders:   []string{"Link"},
-    AllowCredentials: false,
-    MaxAge:           300,
-  }))
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 
 	githubOauthConfig := &oauth2.Config{
 		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
@@ -50,23 +50,25 @@ func main() {
 	tokenAuth := jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
 
 	users_repo := repositories.NewUserRepo(db)
-  keys_repo := repositories.NewKeysRepo(db)
+	keys_repo := repositories.NewKeysRepo(db)
+	faces_repo := repositories.NewFacesRepo(db)
 
 	auth_handler := handlers.NewAuthHandler(logger, users_repo, githubOauthConfig, tokenAuth)
-  keys_handler := handlers.NewKeyHandler(logger, keys_repo, tokenAuth)
+	keys_handler := handlers.NewKeyHandler(logger, keys_repo, tokenAuth)
+	faces_handler_v1 := handlers.NewFacesHandlerV1(logger, faces_repo)
 
-  middleware_service := pkg.NewAuthMiddlewareService(tokenAuth, users_repo)
+	middleware_service := pkg.NewAuthMiddlewareService(tokenAuth, users_repo)
 
-  r.Route("/auth", func(r chi.Router) {
-    auth_handler.RegisterRoutes(r)
-  })
+	r.Route("/auth", func(r chi.Router) {
+		auth_handler.RegisterRoutes(r)
+	})
 
-  // Authenticated routes
-  r.Route("/", func(r chi.Router) {
-    r.Use(middleware_service.Authenticate)
-    keys_handler.RegisterRoutes(r)
-  })
-
+	// Authenticated routes
+	r.Route("/", func(r chi.Router) {
+		r.Use(middleware_service.Authenticate)
+		keys_handler.RegisterRoutes(r)
+		faces_handler_v1.RegisterRoutes(r)
+	})
 
 	fmt.Println("Server launched on port 8080")
 	err = http.ListenAndServe(":8080", r)
