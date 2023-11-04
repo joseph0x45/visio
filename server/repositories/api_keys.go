@@ -35,3 +35,8 @@ func (r *Keys_repo) InsertNewKey(key *models.Key) error {
   )
   return err
 }
+
+func (r *Keys_repo) DeleteKey(key_prefix string, user_id string) error {
+  _, err := r.db.Exec("delete from keys where prefix=$1 and owner=$2", key_prefix, user_id)
+  return err
+}

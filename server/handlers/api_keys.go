@@ -45,7 +45,7 @@ func (h *KeyHandler) GetKeys(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-  w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Content-Type", "application/json")
 	w.Write(data)
 	return
 }
@@ -104,10 +104,28 @@ func (h *KeyHandler) CreateKey(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *KeyHandler) RevokeKey(w http.ResponseWriter, r *http.Request) {
-
+	current_user, ok := r.Context().Value("current_user").(map[string]string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	key_prefix := chi.URLParam(r, "key_prefix")
+	if key_prefix == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+  err := h.keys_repo.DeleteKey(key_prefix, current_user["id"])
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	return
 }
 
 func (h *KeyHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/keys", h.GetKeys)
-  r.Post("/keys", h.CreateKey)
+	r.Post("/keys", h.CreateKey)
+	r.Delete("/keys/{key_prefix}", h.RevokeKey)
 }
