@@ -13,3 +13,11 @@ create table keys (
   owner uuid not null references users(id),
   key_hash text not null
 );
+
+create table faces (
+  id uuid not null primary key,
+  created_by uuid not null references users(id),
+  descriptor text not null,
+  created_at timestamp not null default now(),
+  last_updated timestamp not null default now()
+);
