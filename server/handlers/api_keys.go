@@ -45,6 +45,7 @@ func (h *KeyHandler) GetKeys(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+  w.Header().Add("Content-Type", "application/json")
 	w.Write(data)
 	return
 }
