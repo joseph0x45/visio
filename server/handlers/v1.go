@@ -93,6 +93,10 @@ func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	recognized_faces, err := h.recognizer.RecognizeFile(file_path)
+  err = os.Remove(file_path)
+  if err!= nil {
+    h.logger.Warn("Failed to remove a file: ", err.Error())
+  }
 	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
