@@ -16,6 +16,14 @@ func NewFacesRepo(db *sqlx.DB) *FacesRepo {
 	}
 }
 
+func (r *FacesRepo) InsertFace(face *models.Face) error {
+  _, err := r.db.NamedExec(
+    "insert into faces(id, created_by, descriptor, created_at, last_updated) values(:id, :created_by, :descriptor, :created_at, :last_updated)",
+    &face,
+  )
+  return err
+}
+
 func (r *FacesRepo) SelectAllFacesCreatedByUser(user_id string) (faces []models.Face, err error) {
 	faces = []models.Face{}
 	err = r.db.Select(&faces, "select * from faces where created_by=$1", user_id)

@@ -106,6 +106,9 @@ func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte("Image must contain only one recognizable face"))
 		return
 	}
+  recognized_face := recognized_faces[0]
+  new_face_id := uuid.NewString()
+  err = h.faces_repo.DeleteFace()
 	w.WriteHeader(http.StatusCreated)
 	return
 }

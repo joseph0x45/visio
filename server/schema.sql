@@ -18,6 +18,6 @@ create table faces (
   id uuid not null primary key,
   created_by uuid not null references users(id),
   descriptor text not null,
-  created_at timestamp not null default now(),
-  last_updated timestamp not null default now()
+  created_at text not null,
+  last_updated text not null
 );
