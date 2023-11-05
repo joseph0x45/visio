@@ -34,3 +34,13 @@ func (r *FacesRepo) DeleteFace(face_id , user_id string) error {
   _, err := r.db.Exec("delete from faces where id=$1 and created_by=$2", face_id, user_id)
   return err
 }
+
+func (r *FacesRepo) GetFaceById(face_id , user_id string) (face *models.Face, err error) {
+  err = r.db.Get(
+    face,
+    "select * from faces where id=$1 and created_by=$2",
+    face_id,
+    user_id,
+  )
+  return
+}
