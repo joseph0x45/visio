@@ -1,15 +1,16 @@
 package handlers
 
 import (
-	"bufio"
 	"encoding/json"
 	"io"
 	"net/http"
 	"os"
+	"visio/pkg"
 	"visio/repositories"
 
 	"github.com/Kagami/go-face"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -51,63 +52,62 @@ func (h *FacesHandlerv1) GetFaces(w http.ResponseWriter, r *http.Request) {
 
 func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
 	current_user, ok := r.Context().Value("current_user").(map[string]string)
+	_ = current_user
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, 10<<20+512)
-	reader, err := r.MultipartReader()
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	part, err := reader.NextPart()
-	if err != nil {
-		if err == io.EOF {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	if part.FormName() != "face" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	buf_reader := bufio.NewReader(part)
-	sniff, err := buf_reader.Peek(512)
-	if err != nil {
-		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	content_type := http.DetectContentType(sniff)
-	if content_type != "image/jpeg" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	f, err := os.CreateTemp("", "")
+	f, header, err := r.FormFile("face")
 	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer f.Close()
-	var max_size int64 = 10 << 20
-	lmt := io.MultiReader(buf_reader, io.LimitReader(part, max_size-511))
-	written, err := io.Copy(f, lmt)
-	if err != nil && err != io.EOF {
+	file_extension := pkg.GetFileExtention(header)
+	if file_extension == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid request body: Malformed file name"))
+		return
+	}
+	new_file_id := uuid.NewString()
+	file_path := "faces/" + new_file_id + "." + file_extension
+	dst, err := os.Create(file_path)
+	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if written > max_size {
-		os.Remove(f.Name())
-		w.WriteHeader(http.StatusBadRequest)
+	defer dst.Close()
+	if _, err = io.Copy(dst, f); err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	recognized_faces, err := h.recognizer.RecognizeFile(file_path)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(recognized_faces) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+    w.Write([]byte("No face detected on image"))
+		return
+	}
+	if len(recognized_faces) > 1 {
+		w.WriteHeader(http.StatusBadRequest)
+    w.Write([]byte("Image must contain only one recognizable face"))
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	return
 }
 
 func (h *FacesHandlerv1) UpdateFace(w http.ResponseWriter, r *http.Request) {
