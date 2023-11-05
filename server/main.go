@@ -7,7 +7,6 @@ import (
 	"visio/handlers"
 	"visio/pkg"
 	"visio/repositories"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -18,10 +17,16 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
+	"github.com/Kagami/go-face"
 )
 
 func main() {
 	godotenv.Load()
+	rec, err := face.NewRecognizer("./assets")
+	if err!= nil {
+		panic(err)
+	}
+	defer rec.Close()
 	logger := logrus.New()
 	logger.SetReportCaller(true)
 	db, err := sqlx.Connect("postgres", os.Getenv("DB_URL"))
@@ -55,7 +60,7 @@ func main() {
 
 	auth_handler := handlers.NewAuthHandler(logger, users_repo, githubOauthConfig, tokenAuth)
 	keys_handler := handlers.NewKeyHandler(logger, keys_repo, tokenAuth)
-	faces_handler_v1 := handlers.NewFacesHandlerV1(logger, faces_repo)
+	faces_handler_v1 := handlers.NewFacesHandlerV1(logger, faces_repo, rec)
 
 	middleware_service := pkg.NewAuthMiddlewareService(tokenAuth, users_repo)
 
