@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
+	"visio/models"
 	"visio/pkg"
 	"visio/repositories"
 
@@ -98,18 +100,46 @@ func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(recognized_faces) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
-    w.Write([]byte("No face detected on image"))
+		w.Write([]byte("No face detected on image"))
 		return
 	}
 	if len(recognized_faces) > 1 {
 		w.WriteHeader(http.StatusBadRequest)
-    w.Write([]byte("Image must contain only one recognizable face"))
+		w.Write([]byte("Image must contain only one recognizable face"))
 		return
 	}
-  recognized_face := recognized_faces[0]
-  new_face_id := uuid.NewString()
-  err = h.faces_repo.DeleteFace()
+	descriptor, err := json.Marshal(recognized_faces[0].Descriptor)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	new_face_id := uuid.NewString()
+	new_face := models.Face{
+		Id:          new_face_id,
+		CreatedBy:   current_user["id"],
+		Descriptor:  string(descriptor),
+		CreatedAt:   time.Now().String(),
+		LastUpdated: time.Now().String(),
+	}
+	err = h.faces_repo.InsertFace(&new_face)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	data, err := json.Marshal(
+		map[string]string{
+			"id": new_face_id,
+		},
+	)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
+  w.Write(data)
 	return
 }
 
