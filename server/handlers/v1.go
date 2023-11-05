@@ -160,14 +160,10 @@ func (h *FacesHandlerv1) DeleteFace(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	rows_affected, err := h.faces_repo.DeleteFace(current_user["id"], face_id)
+	err := h.faces_repo.DeleteFace(face_id, current_user["id"])
 	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	if rows_affected == 0 {
-		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
