@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -93,10 +94,10 @@ func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	recognized_faces, err := h.recognizer.RecognizeFile(file_path)
-  err = os.Remove(file_path)
-  if err!= nil {
-    h.logger.Warn("Failed to remove a file: ", err.Error())
-  }
+	err = os.Remove(file_path)
+	if err != nil {
+		h.logger.Warn("Failed to remove a file: ", err.Error())
+	}
 	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -143,7 +144,7 @@ func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-  w.Write(data)
+	w.Write(data)
 	return
 }
 
@@ -169,9 +170,77 @@ func (h *FacesHandlerv1) DeleteFace(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	return
 }
+
 func (h *FacesHandlerv1) CompareFaces(w http.ResponseWriter, r *http.Request) {
-}
-func (h *FacesHandlerv1) DetectFace(w http.ResponseWriter, r *http.Request) {
+	current_user, ok := r.Context().Value("current_user").(map[string]string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	var payload = new(
+		struct {
+			Face1 string `json:"face_1"`
+			Face2 string `json:"face_2"`
+		},
+	)
+	err := json.NewDecoder(r.Body).Decode(payload)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if payload.Face1 == "" || payload.Face2 == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	face1, err := h.faces_repo.GetFaceById(payload.Face1, current_user["id"])
+	if err != nil {
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	face2, err := h.faces_repo.GetFaceById(payload.Face2, current_user["id"])
+	if err != nil {
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	var face1_descriptor *face.Descriptor
+	err = json.Unmarshal([]byte(face1.Descriptor), &face1_descriptor)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	var face2_descriptor *face.Descriptor
+	err = json.Unmarshal([]byte(face2.Descriptor), &face2_descriptor)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	euclidean_distance := face.SquaredEuclideanDistance(*face1_descriptor, *face2_descriptor)
+	data, err := json.Marshal(
+		map[string]interface{}{
+			"distance": euclidean_distance,
+		},
+	)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
 }
 
 func (h *FacesHandlerv1) RegisterRoutes(r chi.Router) {
