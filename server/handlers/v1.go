@@ -343,6 +343,7 @@ func (h *FacesHandlerv1) CompareFaces(w http.ResponseWriter, r *http.Request) {
 
 func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.Request) {
 	current_user, ok := r.Context().Value("current_user").(map[string]string)
+  _ = current_user
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
