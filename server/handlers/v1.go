@@ -184,7 +184,7 @@ func (h *FacesHandlerv1) UpdateFace(w http.ResponseWriter, r *http.Request) {
 	f, header, err := r.FormFile("face")
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	defer f.Close()
@@ -211,14 +211,18 @@ func (h *FacesHandlerv1) UpdateFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	recognized_faces, err := h.recognizer.RecognizeFile(file_path)
+	if err != nil {
+		h.logger.Error(err)
+		err = os.Remove(file_path)
+		if err != nil {
+			h.logger.Warn("Failed to remove a file: ", err.Error())
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	err = os.Remove(file_path)
 	if err != nil {
 		h.logger.Warn("Failed to remove a file: ", err.Error())
-	}
-	if err != nil {
-		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
 	}
 	if len(recognized_faces) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -338,9 +342,124 @@ func (h *FacesHandlerv1) CompareFaces(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.Request) {
+	current_user, ok := r.Context().Value("current_user").(map[string]string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	err := r.ParseMultipartForm(10 << 40)
+	f1, f1_header, err := r.FormFile("face1")
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer f1.Close()
+	f2, f2_header, err := r.FormFile("face1")
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer f2.Close()
 }
 
 func (h *FacesHandlerv1) CompareFacesMixt(w http.ResponseWriter, r *http.Request) {
+	current_user, ok := r.Context().Value("current_user").(map[string]string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	face_id_value := r.FormValue("face_id")
+	if face_id_value == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if _, err := uuid.Parse(face_id_value); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	db_face, err := h.faces_repo.GetFaceById(face_id_value, current_user["id"])
+	if err != nil {
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	var db_face_descriptor *face.Descriptor
+	err = json.Unmarshal([]byte(db_face.Descriptor), &db_face_descriptor)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	f, header, err := r.FormFile("face")
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer f.Close()
+	file_extension := pkg.GetFileExtention(header)
+	if file_extension == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if file_extension != "jpg" {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	new_file_id := uuid.NewString()
+	file_path := "faces/" + new_file_id + "." + file_extension
+	dst, err := os.Create(file_path)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+	if _, err = io.Copy(dst, f); err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	recognized_faces, err := h.recognizer.RecognizeFile(file_path)
+	if err != nil {
+		h.logger.Error(err)
+		err = os.Remove(file_path)
+		if err != nil {
+			h.logger.Warn("Failed to remove a file: ", err.Error())
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(recognized_faces) == 0 || len(recognized_faces) > 1 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	image_face_descriptor := &recognized_faces[0].Descriptor
+	euclidean_distance := face.SquaredEuclideanDistance(*image_face_descriptor, *db_face_descriptor)
+	data, err := json.Marshal(
+		map[string]interface{}{
+			"distance": euclidean_distance,
+		},
+	)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
 }
 
 func (h *FacesHandlerv1) RegisterRoutes(r chi.Router) {
