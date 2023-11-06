@@ -44,3 +44,8 @@ func (r *FacesRepo) GetFaceById(face_id , user_id string) (face *models.Face, er
   )
   return
 }
+
+func (r *FacesRepo) UpdateFace(face_id , user_id, descriptor, last_updated string) error {
+  _, err := r.db.Exec("update faces set descriptor=$1, last_updated=$2 where id=$3 and created_by=$4", descriptor, last_updated, face_id, user_id)
+  return err
+}
