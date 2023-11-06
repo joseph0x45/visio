@@ -234,7 +234,7 @@ func (h *FacesHandlerv1) UpdateFace(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = h.faces_repo.UpdateFace(face_id, current_user["id"], string(descriptor), time.Now().String())
+	err = h.faces_repo.UpdateFace(targetted_face.Id, current_user["id"], string(descriptor), time.Now().String())
 	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -337,13 +337,19 @@ func (h *FacesHandlerv1) CompareFaces(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.Request) {
+}
+
+func (h *FacesHandlerv1) CompareFacesMixt(w http.ResponseWriter, r *http.Request) {
+}
+
 func (h *FacesHandlerv1) RegisterRoutes(r chi.Router) {
 	r.Get("/v1/faces", h.GetFaces)
 	r.Post("/v1/faces", h.CreateFace)
 	r.Put("/v1/faces/{face}", h.UpdateFace)
 	r.Delete("/v1/faces/{face}", h.DeleteFace)
 
-	r.Post("/v1/faces/detect", nil)
 	r.Post("/v1/faces/compare", h.CompareFaces)
-	r.Post("/v1/faces/compare-images", nil)
+	r.Post("/v1/faces/compare-images", h.CompareFacesWithUpload)
+	r.Post("/v1/faces/compare-mixt", h.CompareFacesMixt)
 }
