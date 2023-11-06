@@ -355,6 +355,43 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 		return
 	}
 	defer f1.Close()
+	file_extension := pkg.GetFileExtention(f1_header)
+	if file_extension == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if file_extension != "jpg" {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	new_file_id := uuid.NewString()
+	file_path := "faces/" + new_file_id + "." + file_extension
+	dst, err := os.Create(file_path)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+	if _, err = io.Copy(dst, f1); err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	recognized_faces, err := h.recognizer.RecognizeFile(file_path)
+	if err != nil {
+		h.logger.Error(err)
+		err = os.Remove(file_path)
+		if err != nil {
+			h.logger.Warn("Failed to remove a file ", err.Error())
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(recognized_faces) == 0 || len(recognized_faces) > 1 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	face1_descriptor := recognized_faces[0].Descriptor
 	f2, f2_header, err := r.FormFile("face1")
 	if err != nil {
 		h.logger.Error(err)
@@ -362,6 +399,57 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 		return
 	}
 	defer f2.Close()
+	file_extension = pkg.GetFileExtention(f2_header)
+	if file_extension == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if file_extension != "jpg" {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	new_file_id = uuid.NewString()
+	file_path = "faces/" + new_file_id + "." + file_extension
+	dst, err = os.Create(file_path)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+	if _, err = io.Copy(dst, f1); err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	recognized_faces, err = h.recognizer.RecognizeFile(file_path)
+	if err != nil {
+		h.logger.Error(err)
+		err = os.Remove(file_path)
+		if err != nil {
+			h.logger.Warn("Failed to remove a file ", err.Error())
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(recognized_faces) == 0 || len(recognized_faces) > 1 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	face2_descriptor := recognized_faces[0].Descriptor
+	euclidean_distance := face.SquaredEuclideanDistance(face1_descriptor, face2_descriptor)
+	data, err := json.Marshal(
+		map[string]interface{}{
+			"distance": euclidean_distance,
+		},
+	)
+	if err != nil {
+		h.logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+  w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
 }
 
 func (h *FacesHandlerv1) CompareFacesMixt(w http.ResponseWriter, r *http.Request) {
