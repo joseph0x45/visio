@@ -9,9 +9,10 @@
 	<nav class="bg-white border-b border-gray-200">
 		<div class="mx-auto max-w-7xl px-4 lg:px-8">
 			<div class="flex h-16 items-center justify-between">
-				<!-- First block-->
 				<div class="flex items-center">
-					<h1 class="font-semibold text-lg">VISIO</h1>
+					<a href="/console">
+						<h1 class="font-semibold text-lg">VISIO</h1>
+					</a>
 					<div class="hidden md:block">
 						<div class="ml-10 flex items-baseline space-x-4">
 							<a

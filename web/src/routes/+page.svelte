@@ -20,6 +20,8 @@
 	}
 </script>
 
+<title>Visio | Landing</title>
+
 <div class="bg-white">
 	<header class="absolute inset-x-0 top-0 z-50">
 		<nav class="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
@@ -35,12 +37,13 @@
 			</div>
 			<div class="hidden lg:flex lg:gap-x-12">
 				<a href="https://github.com/thewisepigeon/visio" target="_blank" class="text-sm font-semibold leading-6 text-gray-900">GitHub</a>
-				<a href="/#" class="text-sm font-semibold leading-6 text-gray-900">Documentation</a>
-				<a href="/#" class="text-sm font-semibold leading-6 text-gray-900">Discord</a>
+				<a href="/" class="text-sm font-semibold leading-6 text-gray-900">Documentation</a>
+				<a href="https://discord.gg/rDNvUpct" target="_blank" class="text-sm font-semibold leading-6 text-gray-900">Discord</a>
 			</div>
 			<button on:click={github_auth} class="hidden lg:flex lg:flex-1 lg:justify-end">
-				<h1 class="text-sm font-semibold leading-6 text-gray-900"
-					>Log in with GitHub <span aria-hidden="true">&rarr;</span></h1>
+				<h1 class="text-sm font-semibold leading-6 text-gray-900">
+          Log in with GitHub <span aria-hidden="true">&rarr;</span>
+        </h1>
 			</button>
 		</nav>
 	</header>
@@ -60,7 +63,7 @@
 				<div
 					class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20"
 				>
-					<h1>Visio is still in active development. Join our <a  class="text-sm font-semibold leading-6 text-gray-900" href="somethin">Discord</a> to stay up to date and contribute</h1>
+					<h1>Visio is still in active development. Join our <a  class="text-sm font-semibold leading-6 text-gray-900" href="https://discord.gg/rDNvUpct" target="_blank">Discord</a> to stay up to date and contribute</h1>
 				</div>
 			</div>
 			<div class="text-center">
