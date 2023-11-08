@@ -30,14 +30,6 @@ func (m *MiddlewareService) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 		bearer_token := strings.Split(auth_header, " ")[1]
-		// auth_cookie, err := r.Cookie("auth_token")
-		// if err != nil {
-		// 	if err == http.ErrNoCookie {
-		// 		w.WriteHeader(http.StatusUnauthorized)
-		// 		return
-		// 	}
-		// }
-		// auth_token := auth_cookie.Value
 		claims, err := m.token_auth.Decode(bearer_token)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

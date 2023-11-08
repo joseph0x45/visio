@@ -59,6 +59,7 @@ func main() {
 	faces_repo := repositories.NewFacesRepo(db)
 
 	auth_handler := handlers.NewAuthHandler(logger, users_repo, githubOauthConfig, tokenAuth)
+  user_handler := handlers.NewUserHandler(logger, users_repo)
 	keys_handler := handlers.NewKeyHandler(logger, keys_repo, tokenAuth)
 	faces_handler_v1 := handlers.NewFacesHandlerV1(logger, faces_repo, rec)
 
@@ -68,11 +69,11 @@ func main() {
 		auth_handler.RegisterRoutes(r)
 	})
 
-	// Authenticated routes
 	r.Route("/", func(r chi.Router) {
 		r.Use(middleware_service.Authenticate)
 		keys_handler.RegisterRoutes(r)
 		faces_handler_v1.RegisterRoutes(r)
+    user_handler.RegisterRoutes(r)
 	})
 
 	fmt.Println("Server launched on port 8080")
