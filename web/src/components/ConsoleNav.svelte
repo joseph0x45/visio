@@ -16,11 +16,11 @@
 					<div class="hidden md:block">
 						<div class="ml-10 flex items-baseline space-x-4">
 							<a
-								href="/console"
+								href="/console/keys"
 								class=" rounded-md px-3 py-2 text-sm font-medium"
-								aria-current="page">API keys</a
+								aria-current="page">Keys</a
 							>
-							<a href="/console" class=" rounded-md px-3 py-2 text-sm font-medium">Docs</a>
+							<a href="https://github.com/TheWisePigeon/visio#README" target="_blank" class=" rounded-md px-3 py-2 text-sm font-medium">Docs</a>
 							<a
 								href="https://github.com/TheWisePigeon/visio"
 								target="_blank"
