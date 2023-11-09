@@ -31,7 +31,10 @@ export const actions : Actions = {
       const response = await fetch(
         "http://localhost:8080/keys",
         {
-          method:"POST"
+          method:"POST",
+          headers:{
+            "Authorization": `Bearer ${auth_token}`
+          }
         }
       )
       if (response.status==201){

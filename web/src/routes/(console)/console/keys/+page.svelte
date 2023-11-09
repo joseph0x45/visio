@@ -17,9 +17,9 @@
 			toast.dismiss('create_key');
 			switch (result.type) {
         case 'success':
-          console.log("test")
+          console.log(result.data)
         case 'failure':
-          console.log("test")
+          console.log("error")
 			}
       await update()
 		};
