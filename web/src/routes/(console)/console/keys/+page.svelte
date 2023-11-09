@@ -18,6 +18,7 @@
 			switch (result.type) {
         case 'success':
           console.log(result.data)
+          break
         case 'failure':
           console.log("error")
 			}
