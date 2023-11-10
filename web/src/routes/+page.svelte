@@ -28,6 +28,11 @@
 			<div class="flex lg:flex-1">
 				<a href="/" class="-m-1.5 p-1.5">
 					<span class="sr-only">Visio</span>
+					<img
+						class="h-12 w-auto"
+						src="/logo.png"
+						alt="logo"
+					/>
 				</a>
 			</div>
 			<div class="hidden lg:flex lg:gap-x-12">
