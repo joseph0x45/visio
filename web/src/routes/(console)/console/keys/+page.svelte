@@ -1,13 +1,20 @@
 <script lang="ts">
+	import Key from '../../../../components/Key.svelte';
 	import { type SubmitFunction, enhance } from '$app/forms';
 	import toast from 'svelte-french-toast';
+	import type { PageData } from './$types';
+	export let data: PageData;
+	$: ({ keys } = data);
 	let show_key = false;
+	let created_key = '';
 	let loading = false;
-	function copy_key() {
+	async function copy_key() {
+		await navigator.clipboard.writeText(created_key);
 		toast.success('Key copied to clipboard');
 	}
 	function dismiss() {
 		show_key = false;
+		created_key = '';
 	}
 	const handle_key_creation: SubmitFunction = () => {
 		loading = true;
@@ -16,13 +23,24 @@
 			loading = false;
 			toast.dismiss('create_key');
 			switch (result.type) {
-        case 'success':
-          console.log(result.data)
-          break
-        case 'failure':
-          console.log("error")
+				case 'success':
+					const key = result.data!.key;
+					if (!key) {
+						toast.error('Something went wrong\nTry again or contact us');
+						return;
+					}
+					created_key = key;
+					show_key = true;
+					break;
+				case 'failure':
+					if (result.status == 403) {
+						toast.error('You can only have one key currently');
+						break;
+					}
+					toast.error('Something went wrong\nTry again or contact us');
+					break;
 			}
-      await update()
+			await update();
 		};
 	};
 </script>
@@ -36,7 +54,7 @@
 				Here is your key! Once you dismiss this modal you won't be able to see it again.
 			</h1>
 			<div class="p-2 flex justify-center gap-10 border rounded-md">
-				<h1>some random key bruhbruh bruh bruh bruh bruh bruh bruh</h1>
+				<h1>{created_key}</h1>
 				<button on:click={copy_key}>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -59,10 +77,14 @@
 	</div>
 {/if}
 
-<div class="min-h-full flex justify-end">
+<div class="min-h-full flex justify-between items-center mb-10">
+	<h1 class="text-lg">Your keys</h1>
 	<form action="?/create" method="post" use:enhance={handle_key_creation}>
 		<button disabled={loading} class="rounded-md p-2 w-fit bg-black text-white">
 			<h1>Create a key</h1>
 		</button>
 	</form>
 </div>
+{#each keys as key}
+	<Key key_prefix={key.prefix} />
+{/each}

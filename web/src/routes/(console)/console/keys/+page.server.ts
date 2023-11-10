@@ -1,6 +1,13 @@
 import { redirect, type Actions, fail } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
+type Key = {
+  id: string,
+  owner: string,
+  prefix: string,
+  key_hash: string
+}
+
 export const load: PageServerLoad = async ({ cookies }) => {
   const auth_token = cookies.get("auth_token")
   if (!auth_token) {
@@ -14,30 +21,30 @@ export const load: PageServerLoad = async ({ cookies }) => {
       }
     }
   )
-  const data = await response.json()
+  const data = await response.json() as Array<Key>
   console.log(data)
   return {
-    data
+    keys: data
   }
 }
 
-export const actions : Actions = {
-  create: async ({ cookies }) =>{
+export const actions: Actions = {
+  create: async ({ cookies }) => {
     try {
       const auth_token = cookies.get("auth_token")
-      if (!auth_token){
+      if (!auth_token) {
         throw redirect(301, "/")
       }
       const response = await fetch(
         "http://localhost:8080/keys",
         {
-          method:"POST",
-          headers:{
+          method: "POST",
+          headers: {
             "Authorization": `Bearer ${auth_token}`
           }
         }
       )
-      if (response.status==201){
+      if (response.status == 201) {
         const { key } = await response.json() as { key: string }
         return {
           key
