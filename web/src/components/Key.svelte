@@ -1,12 +1,25 @@
 <script lang="ts">
-	import  { type SubmitFunction, enhance } from '$app/forms';
+	import { type SubmitFunction, enhance } from '$app/forms';
 	import toast from 'svelte-french-toast';
 
 	export let key_prefix: string;
 	const handle_key_deletion: SubmitFunction = async ({ data }) => {
 		toast.loading('Revoking key', { id: 'revoke_key' });
 		console.log(data.get('prefix'));
-    toast.dismiss('revoke_key')
+		toast.dismiss('revoke_key');
+		return async ({ update, result }) => {
+			switch (result.type) {
+				case 'failure':
+					toast.error('Something went wrong\nTry again or contact us');
+					break;
+				case 'success':
+					toast.success('Key deleted');
+					break;
+				default:
+					break;
+			}
+      await update()
+		};
 	};
 </script>
 

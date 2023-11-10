@@ -78,7 +78,7 @@
 {/if}
 
 <div class="min-h-full flex justify-between items-center mb-10">
-	<h1 class="text-lg">Your keys</h1>
+	<h1 class="text-lg">Your keys ( {keys.length}/1 )</h1>
 	<form action="?/create" method="post" use:enhance={handle_key_creation}>
 		<button disabled={loading} class="rounded-md p-2 w-fit bg-black text-white">
 			<h1>Create a key</h1>
