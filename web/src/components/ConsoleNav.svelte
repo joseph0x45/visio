@@ -17,7 +17,7 @@
 						<div class="ml-10 flex items-baseline space-x-4">
 							<a
 								href="/console/keys"
-								class=" rounded-md px-3 py-2 text-sm font-medium"
+								class=" rounded-md px-3 py-2 border border-gray-200 text-sm font-medium"
 								aria-current="page">Keys</a
 							>
 							<a href="https://github.com/TheWisePigeon/visio#README" target="_blank" class=" rounded-md px-3 py-2 text-sm font-medium">Docs</a>
