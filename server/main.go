@@ -22,7 +22,7 @@ import (
 
 func main() {
 	godotenv.Load()
-	rec, err := face.NewRecognizer("./assets")
+	rec, err := face.NewRecognizer(os.Getenv("MODELS_DIR"))
 	if err!= nil {
 		panic(err)
 	}
