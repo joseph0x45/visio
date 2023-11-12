@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import toast from 'svelte-french-toast';
+  import { API_URL } from "$lib/config"
 	let loading = false;
 	async function github_auth() {
 		try {
@@ -8,7 +9,7 @@
 			toast.loading('Signing you in', {
 				id: 'loading'
 			});
-			let response = await fetch('http://localhost:8080/auth/request');
+			let response = await fetch(`${API_URL}/auth/request`);
 			const { url } = (await response.json()) as { url: string };
 			goto(url);
 		} catch (err) {

@@ -1,5 +1,6 @@
 import { redirect } from "@sveltejs/kit"
 import type { LayoutServerLoad } from "./$types"
+import { API_URL } from "$lib/config"
 
 export const load: LayoutServerLoad = async ({ cookies }) => {
   const auth_token = cookies.get("auth_token")
@@ -7,7 +8,7 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
     throw redirect(301, "/")
   }
   const response = await fetch(
-    "http://localhost:8080/user",
+    `${API_URL}/user`,
     {
       headers: {
         "Authorization": `Bearer ${auth_token}`

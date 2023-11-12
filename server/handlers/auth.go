@@ -124,7 +124,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 				Value: auth_token,
 				Path:  "/",
 			})
-			http.Redirect(w, r, "https://www.getvisio.cloud/console", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "https://getvisio.cloud/console", http.StatusTemporaryRedirect)
 			return
 		}
 		h.logger.Error(err)
@@ -152,7 +152,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 		Value: auth_token,
 		Path:  "/",
 	})
-  http.Redirect(w, r, "https://www.getvisio.cloud/console", http.StatusTemporaryRedirect)
+  http.Redirect(w, r, "https://getvisio.cloud/console", http.StatusTemporaryRedirect)
 	return
 }
 

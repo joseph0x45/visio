@@ -1,5 +1,6 @@
 import { redirect, type Actions, fail } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
+import { API_URL } from "$lib/config";
 
 type Key = {
   id: string,
@@ -14,7 +15,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
     throw redirect(301, "/")
   }
   const response = await fetch(
-    "http://localhost:8080/keys",
+    `${API_URL}/keys`,
     {
       headers: {
         Authorization: `Bearer ${auth_token}`
@@ -35,7 +36,7 @@ export const actions: Actions = {
         throw redirect(301, "/")
       }
       const response = await fetch(
-        "http://localhost:8080/keys",
+        `${API_URL}/keys`,
         {
           method: "POST",
           headers: {
@@ -67,7 +68,7 @@ export const actions: Actions = {
         return fail(500)
       }
       const response = await fetch(
-        `http://localhost:8080/keys/${key_prefix}`,
+        `${API_URL}/keys/${key_prefix}`,
         {
           method: "DELETE",
           headers: {
