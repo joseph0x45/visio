@@ -63,7 +63,7 @@ func main() {
 	keys_handler := handlers.NewKeyHandler(logger, keys_repo, tokenAuth)
 	faces_handler_v1 := handlers.NewFacesHandlerV1(logger, faces_repo, rec)
 
-	middleware_service := pkg.NewAuthMiddlewareService(tokenAuth, users_repo)
+	middleware_service := pkg.NewAuthMiddlewareService(tokenAuth, users_repo, keys_repo, logger)
 
 	r.Route("/auth", func(r chi.Router) {
 		auth_handler.RegisterRoutes(r)
