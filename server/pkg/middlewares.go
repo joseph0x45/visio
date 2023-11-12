@@ -70,7 +70,7 @@ func (m *MiddlewareService) AuthenticateWithKey(next http.Handler) http.Handler 
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		key_prefix := strings.Split(api_key, ".")[0]
+		key_prefix, key_str := strings.Split(api_key, ".")[0], strings.Split(api_key, ".")[1]
 		key, err := m.keys_repo.GetKeyByPrefix(key_prefix)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -79,6 +79,11 @@ func (m *MiddlewareService) AuthenticateWithKey(next http.Handler) http.Handler 
 			}
 			m.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		key_is_valid := HashMatches(key.KeyHash, key_str)
+		if !key_is_valid {
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		current_user, err := m.users_repo.GetById(key.Owner)
