@@ -72,9 +72,13 @@ func main() {
 	r.Route("/", func(r chi.Router) {
 		r.Use(middleware_service.Authenticate)
 		keys_handler.RegisterRoutes(r)
-		faces_handler_v1.RegisterRoutes(r)
     user_handler.RegisterRoutes(r)
 	})
+
+  r.Route("/v1", func(r chi.Router) {
+    r.Use(middleware_service.AuthenticateWithKey)
+    faces_handler_v1.RegisterRoutes(r)
+  })
 
 	fmt.Println("Server launched on port 8080")
 	err = http.ListenAndServe(":8080", r)

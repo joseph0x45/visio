@@ -637,13 +637,13 @@ func (h *FacesHandlerv1) CompareFacesMixt(w http.ResponseWriter, r *http.Request
 }
 
 func (h *FacesHandlerv1) RegisterRoutes(r chi.Router) {
-	r.Get("/v1/faces", h.GetFaces)
-	r.Post("/v1/faces", h.CreateFace)
-	r.Put("/v1/faces/{face}", h.UpdateFace)
-	r.Delete("/v1/faces/{face}", h.DeleteFace)
+	r.Get("/faces", h.GetFaces)
+	r.Post("/faces", h.CreateFace)
+	r.Put("/faces/{face}", h.UpdateFace)
+	r.Delete("/faces/{face}", h.DeleteFace)
 
-	r.Post("/v1/faces/detect", h.GetFace)
-	r.Post("/v1/faces/compare", h.CompareFaces)
-	r.Post("/v1/faces/compare-images", h.CompareFacesWithUpload)
-	r.Post("/v1/faces/compare-mixt", h.CompareFacesMixt)
+	r.Post("/faces/detect", h.GetFace)
+	r.Post("/faces/compare", h.CompareFaces)
+	r.Post("/faces/compare-images", h.CompareFacesWithUpload)
+	r.Post("/faces/compare-mixt", h.CompareFacesMixt)
 }

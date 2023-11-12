@@ -65,17 +65,12 @@ func (m *MiddlewareService) Authenticate(next http.Handler) http.Handler {
 
 func (m *MiddlewareService) AuthenticateWithKey(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		auth_header := r.Header.Get("Authorization")
-		if len(strings.Split(auth_header, " ")) != 2 {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		api_key := strings.Split(auth_header, " ")[1]
+		api_key := r.Header.Get("Authorization")
 		if len(strings.Split(api_key, ".")) != 2 {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		key_prefix := strings.Split(api_key, ".")[1]
+		key_prefix := strings.Split(api_key, ".")[0]
 		key, err := m.keys_repo.GetKeyByPrefix(key_prefix)
 		if err != nil {
 			if err == sql.ErrNoRows {
