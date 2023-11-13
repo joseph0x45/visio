@@ -3,9 +3,7 @@ import type { LayoutServerLoad } from "./$types"
 import { API_URL } from "$lib/config"
 
 export const load: LayoutServerLoad = async ({ cookies }) => {
-  console.log("running from server load")
   const auth_token = cookies.get('auth_token')
-  console.log(auth_token)
   const response = await fetch(
     `${API_URL}/user`,
     {
