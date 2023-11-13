@@ -4,15 +4,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"visio/models"
-	"visio/repositories"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	"io"
+	"net/http"
+	"visio/models"
+	"visio/repositories"
 )
 
 type AuthHandler struct {
@@ -120,11 +120,13 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			http.SetCookie(w, &http.Cookie{
-				Name:  "auth_token",
-				Value: auth_token,
-				Path:  "/",
+				Name:     "auth_token",
+				Value:    auth_token,
+				Path:     "/",
+				SameSite: http.SameSiteLaxMode,
+				Secure:   true,
 			})
-			http.Redirect(w, r, "https://getvisio.cloud", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "http://localhost:5173/console", http.StatusTemporaryRedirect)
 			return
 		}
 		h.logger.Error(err)
@@ -148,11 +150,13 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name:  "auth_token",
-		Value: auth_token,
-		Path:  "/",
+		Name:     "auth_token",
+		Value:    auth_token,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
+		Secure:   true,
 	})
-  http.Redirect(w, r, "https://getvisio.cloud", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "http://localhost:5173/console", http.StatusTemporaryRedirect)
 	return
 }
 
