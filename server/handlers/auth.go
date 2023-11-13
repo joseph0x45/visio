@@ -126,7 +126,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 				SameSite: http.SameSiteLaxMode,
 				Secure:   true,
 			})
-			http.Redirect(w, r, "http://localhost:5173/console", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "https://getvisio.cloud/console", http.StatusTemporaryRedirect)
 			return
 		}
 		h.logger.Error(err)
@@ -156,7 +156,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 		Secure:   true,
 	})
-	http.Redirect(w, r, "http://localhost:5173/console", http.StatusTemporaryRedirect)
+  http.Redirect(w, r, "https://getvisio.cloud/console", http.StatusTemporaryRedirect)
 	return
 }
 
