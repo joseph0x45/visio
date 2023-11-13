@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import toast from 'svelte-french-toast';
-  import { API_URL } from "$lib/config"
+	import { API_URL } from '$lib/config';
 	let loading = false;
 	async function github_auth() {
 		try {
@@ -29,22 +29,26 @@
 			<div class="flex lg:flex-1">
 				<a href="/" class="-m-1.5 p-1.5">
 					<span class="sr-only">Visio</span>
-					<img
-						class="h-12 w-auto"
-						src="/logo.png"
-						alt="logo"
-					/>
+					<img class="h-12 w-auto" src="/logo.png" alt="logo" />
 				</a>
 			</div>
 			<div class="hidden lg:flex lg:gap-x-12">
-				<a href="https://github.com/thewisepigeon/visio" target="_blank" class="text-sm font-semibold leading-6 text-gray-900">GitHub</a>
+				<a
+					href="https://github.com/thewisepigeon/visio"
+					target="_blank"
+					class="text-sm font-semibold leading-6 text-gray-900">GitHub</a
+				>
 				<a href="/" class="text-sm font-semibold leading-6 text-gray-900">Documentation</a>
-				<a href="https://discord.gg/rDNvUpct" target="_blank" class="text-sm font-semibold leading-6 text-gray-900">Discord</a>
+				<a
+					href="https://discord.gg/rDNvUpct"
+					target="_blank"
+					class="text-sm font-semibold leading-6 text-gray-900">Discord</a
+				>
 			</div>
 			<button on:click={github_auth} class="hidden lg:flex lg:flex-1 lg:justify-end">
 				<h1 class="text-sm font-semibold leading-6 text-gray-900">
-          Log in with GitHub <span aria-hidden="true">&rarr;</span>
-        </h1>
+					Log in with GitHub <span aria-hidden="true">&rarr;</span>
+				</h1>
 			</button>
 		</nav>
 	</header>
@@ -64,7 +68,13 @@
 				<div
 					class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20"
 				>
-					<h1>Visio is still in active development. Join our <a  class="text-sm font-semibold leading-6 text-gray-900" href="https://discord.gg/rDNvUpct" target="_blank">Discord</a> to stay up to date and contribute</h1>
+					<h1>
+						Visio is still in active development. Join our <a
+							class="text-sm font-semibold leading-6 text-gray-900"
+							href="https://discord.gg/rDNvUpct"
+							target="_blank">Discord</a
+						> to stay up to date and contribute
+					</h1>
 				</div>
 			</div>
 			<div class="text-center">

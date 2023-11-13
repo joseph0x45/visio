@@ -2,7 +2,7 @@ import { redirect } from "@sveltejs/kit"
 import type { LayoutServerLoad } from "./$types"
 import { API_URL } from "$lib/config"
 
-export const load: LayoutServerLoad = async ({ cookies }) => {
+export const load: LayoutServerLoad = async ({ cookies, request }) => {
   const auth_token = cookies.get("auth_token")
   if (!auth_token) {
     throw redirect(301, "/")
