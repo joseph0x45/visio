@@ -119,14 +119,8 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			http.SetCookie(w, &http.Cookie{
-				Name:     "auth_token",
-				Value:    auth_token,
-				Path:     "/",
-				SameSite: http.SameSiteLaxMode,
-				Secure:   true,
-			})
-			http.Redirect(w, r, "https://getvisio.cloud/console", http.StatusTemporaryRedirect)
+			redirection_url := fmt.Sprintf("https://getvisio.cloud/login?token=%s", auth_token)
+			http.Redirect(w, r, redirection_url, http.StatusTemporaryRedirect)
 			return
 		}
 		h.logger.Error(err)
@@ -149,14 +143,8 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "auth_token",
-		Value:    auth_token,
-		Path:     "/",
-		SameSite: http.SameSiteLaxMode,
-		Secure:   true,
-	})
-  http.Redirect(w, r, "https://getvisio.cloud/console", http.StatusTemporaryRedirect)
+	redirection_url := fmt.Sprintf("https://getvisio.cloud/login?token=%s", auth_token)
+	http.Redirect(w, r, redirection_url, http.StatusTemporaryRedirect)
 	return
 }
 
