@@ -54,38 +54,86 @@ func (h *FacesHandlerv1) GetFaces(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *FacesHandlerv1) GetFace(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	current_user, ok := r.Context().Value("current_user").(map[string]string)
-  _ = current_user
+	_ = current_user
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+  println(r.Header.Get("Authorization"))
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusBadRequest)
+		data, err := json.Marshal(
+			map[string]string{
+				"error_code": "400_001",
+			},
+		)
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Write(data)
 		return
 	}
 	if _, ok := r.MultipartForm.File["face"]; !ok {
+		data, err := json.Marshal(
+			map[string]string{
+				"error_code": "400_002",
+			},
+		)
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(data)
 		return
 	}
 	f, header, err := r.FormFile("face")
 	if err != nil {
+		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer f.Close()
 	file_extension := pkg.GetFileExtention(header)
 	if file_extension == "" {
+		data, err := json.Marshal(
+			map[string]string{
+				"error_code": "400_003",
+			},
+		)
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(data)
 		return
 	}
 	if file_extension != "jpg" {
+		data, err := json.Marshal(
+			map[string]string{
+				"error_code": "400_004",
+			},
+		)
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(data)
+		return
 	}
 	new_file_id := uuid.NewString()
-	file_path := "faces/" + new_file_id + "." + file_extension
+	file_path := os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
 	dst, err := os.Create(file_path)
 	if err != nil {
 		h.logger.Error(err)
@@ -109,13 +157,33 @@ func (h *FacesHandlerv1) GetFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(recognized_faces) == 0 {
+		data, err := json.Marshal(
+			map[string]string{
+				"error_code": "400_005",
+			},
+		)
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("No face detected on image"))
+		w.Write(data)
 		return
 	}
 	if len(recognized_faces) > 1 {
+		data, err := json.Marshal(
+			map[string]string{
+				"error_code": "400_006",
+			},
+		)
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Image must contain only one recognizable face"))
+		w.Write(data)
 		return
 	}
 	descriptor, err := json.Marshal(recognized_faces[0].Descriptor)
@@ -167,7 +235,7 @@ func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	new_file_id := uuid.NewString()
-	file_path := "faces/" + new_file_id + "." + file_extension
+	file_path := os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
 	dst, err := os.Create(file_path)
 	if err != nil {
 		h.logger.Error(err)
@@ -282,7 +350,7 @@ func (h *FacesHandlerv1) UpdateFace(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	new_file_id := uuid.NewString()
-	file_path := "faces/" + new_file_id + "." + file_extension
+	file_path := os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
 	dst, err := os.Create(file_path)
 	if err != nil {
 		h.logger.Error(err)
@@ -450,7 +518,7 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	new_file_id := uuid.NewString()
-	file_path := "faces/" + new_file_id + "." + file_extension
+	file_path := os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
 	dst, err := os.Create(file_path)
 	if err != nil {
 		h.logger.Error(err)
@@ -494,7 +562,7 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	new_file_id = uuid.NewString()
-	file_path = "faces/" + new_file_id + "." + file_extension
+	file_path = os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
 	dst, err = os.Create(file_path)
 	if err != nil {
 		h.logger.Error(err)
@@ -592,7 +660,7 @@ func (h *FacesHandlerv1) CompareFacesMixt(w http.ResponseWriter, r *http.Request
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	new_file_id := uuid.NewString()
-	file_path := "faces/" + new_file_id + "." + file_extension
+	file_path := os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
 	dst, err := os.Create(file_path)
 	if err != nil {
 		h.logger.Error(err)

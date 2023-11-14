@@ -4,15 +4,17 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"visio/models"
+	"visio/repositories"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-	"io"
-	"net/http"
-	"visio/models"
-	"visio/repositories"
 )
 
 type AuthHandler struct {
@@ -119,7 +121,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			redirection_url := fmt.Sprintf("https://getvisio.cloud/login?token=%s", auth_token)
+			redirection_url := fmt.Sprintf("%s/login?token=%s", os.Getenv("CONSOLE_URL"), auth_token)
 			http.Redirect(w, r, redirection_url, http.StatusTemporaryRedirect)
 			return
 		}
@@ -143,7 +145,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	redirection_url := fmt.Sprintf("https://getvisio.cloud/login?token=%s", auth_token)
+	redirection_url := fmt.Sprintf("%s/login?token=%s", os.Getenv("CONSOLE_URL"), auth_token)
 	http.Redirect(w, r, redirection_url, http.StatusTemporaryRedirect)
 	return
 }
