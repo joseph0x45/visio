@@ -558,7 +558,7 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	err := r.ParseMultipartForm(10 << 40)
+	err := r.ParseMultipartForm(10 << 50)
 	f1, f1_header, err := r.FormFile("face1")
 	if err != nil {
 		h.logger.Error(err)
@@ -568,11 +568,22 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 	defer f1.Close()
 	file_extension := pkg.GetFileExtention(f1_header)
 	if file_extension == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "INVALID FILE NAME ON 'face1'")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	if file_extension != "jpg" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "UNSUPPORTED FILE FORMAT ON 'face1'")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
 	}
 	new_file_id := uuid.NewString()
 	file_path := os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
@@ -598,12 +609,26 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if len(recognized_faces) == 0 || len(recognized_faces) > 1 {
-		w.WriteHeader(http.StatusBadRequest)
+	if len(recognized_faces) == 0 {
+		err = pkg.RespondToBadRequest(w, "NO FACE DETECTED ON 'face1'")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	if len(recognized_faces) > 1 {
+		err = pkg.RespondToBadRequest(w, "MORE THAN ONE FACE DETECTED ON 'face1'")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	face1_descriptor := recognized_faces[0].Descriptor
-	f2, f2_header, err := r.FormFile("face1")
+	f2, f2_header, err := r.FormFile("face2")
 	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -612,11 +637,22 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 	defer f2.Close()
 	file_extension = pkg.GetFileExtention(f2_header)
 	if file_extension == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "INVALID FILE NAME on 'face2'")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	if file_extension != "jpg" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "UNSUPPORTED FORMAT ON 'face2'")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
 	}
 	new_file_id = uuid.NewString()
 	file_path = os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
@@ -627,7 +663,7 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 		return
 	}
 	defer dst.Close()
-	if _, err = io.Copy(dst, f1); err != nil {
+	if _, err = io.Copy(dst, f2); err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -642,8 +678,22 @@ func (h *FacesHandlerv1) CompareFacesWithUpload(w http.ResponseWriter, r *http.R
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if len(recognized_faces) == 0 || len(recognized_faces) > 1 {
-		w.WriteHeader(http.StatusBadRequest)
+	if len(recognized_faces) == 0 {
+		err = pkg.RespondToBadRequest(w, "NO FACE DETECTED ON 'face2'")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	if len(recognized_faces) > 1 {
+		err = pkg.RespondToBadRequest(w, "MORE THAT ONE FACE DETECTED ON 'face2'")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	face2_descriptor := recognized_faces[0].Descriptor
