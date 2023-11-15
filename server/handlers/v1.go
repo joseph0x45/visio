@@ -432,8 +432,13 @@ func (h *FacesHandlerv1) DeleteFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	face_id := chi.URLParam(r, "face")
-	if face_id == "" {
-		w.WriteHeader(http.StatusBadRequest)
+	if _, err := uuid.Parse(face_id); err != nil {
+		err = pkg.RespondToBadRequest(w, "'face' PARAMETER IS NOT A UUID")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	err := h.faces_repo.DeleteFace(face_id, current_user["id"])
