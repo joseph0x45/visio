@@ -473,10 +473,33 @@ func (h *FacesHandlerv1) CompareFaces(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	if _, err := uuid.Parse(payload.Face1); err != nil {
+		err = pkg.RespondToBadRequest(w, "'face_1' PARAMETER IS NOT A UUID")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	if _, err := uuid.Parse(payload.Face2); err != nil {
+		err = pkg.RespondToBadRequest(w, "'face_2' PARAMETER IS NOT A UUID")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
 	face1, err := h.faces_repo.GetFaceById(payload.Face1, current_user["id"])
 	if err != nil {
 		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusBadRequest)
+			err = pkg.RespondToBadRequest(w, "face_1 NOT FOUND")
+			if err != nil {
+				h.logger.Error(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 		h.logger.Error(err)
@@ -486,7 +509,12 @@ func (h *FacesHandlerv1) CompareFaces(w http.ResponseWriter, r *http.Request) {
 	face2, err := h.faces_repo.GetFaceById(payload.Face2, current_user["id"])
 	if err != nil {
 		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusBadRequest)
+			err = pkg.RespondToBadRequest(w, "face_2 NOT FOUND")
+			if err != nil {
+				h.logger.Error(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 		h.logger.Error(err)
