@@ -727,17 +727,32 @@ func (h *FacesHandlerv1) CompareFacesMixt(w http.ResponseWriter, r *http.Request
 	}
 	face_id_value := r.FormValue("face_id")
 	if face_id_value == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "'face_id' PARAMETER NOT FOUND")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	if _, err := uuid.Parse(face_id_value); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "'face_id' NOT A UUID")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	db_face, err := h.faces_repo.GetFaceById(face_id_value, current_user["id"])
 	if err != nil {
 		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusBadRequest)
+			err = pkg.RespondToBadRequest(w, "FACE NOT FOUND")
+			if err != nil {
+				h.logger.Error(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 		h.logger.Error(err)
@@ -754,17 +769,33 @@ func (h *FacesHandlerv1) CompareFacesMixt(w http.ResponseWriter, r *http.Request
 	f, header, err := r.FormFile("face")
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "'face' FIELD NOT FOUND")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	defer f.Close()
 	file_extension := pkg.GetFileExtention(header)
 	if file_extension == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "INVALID FILE NAME")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	if file_extension != "jpg" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "UNSUPPORTED FORMAT")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
 	}
 	new_file_id := uuid.NewString()
 	file_path := os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
@@ -790,8 +821,22 @@ func (h *FacesHandlerv1) CompareFacesMixt(w http.ResponseWriter, r *http.Request
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if len(recognized_faces) == 0 || len(recognized_faces) > 1 {
-		w.WriteHeader(http.StatusBadRequest)
+	if len(recognized_faces) == 0 {
+		err = pkg.RespondToBadRequest(w, "NO FACE DETECTED")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	if len(recognized_faces) > 1 {
+		err = pkg.RespondToBadRequest(w, "MORE THAN ONE FACE DETECTED")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	image_face_descriptor := &recognized_faces[0].Descriptor
