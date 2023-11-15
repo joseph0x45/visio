@@ -36,6 +36,7 @@ func (r *FacesRepo) DeleteFace(face_id , user_id string) error {
 }
 
 func (r *FacesRepo) GetFaceById(face_id , user_id string) (face *models.Face, err error) {
+  face = new(models.Face)
   err = r.db.Get(
     face,
     "select * from faces where id=$1 and created_by=$2",

@@ -61,37 +61,24 @@ func (h *FacesHandlerv1) GetFace(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-  println(r.Header.Get("Authorization"))
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusBadRequest)
-		data, err := json.Marshal(
-			map[string]string{
-				"error_code": "400_001",
-			},
-		)
+		err = pkg.RespondToBadRequest(w, "INVALID BODY")
 		if err != nil {
 			h.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.Write(data)
 		return
 	}
 	if _, ok := r.MultipartForm.File["face"]; !ok {
-		data, err := json.Marshal(
-			map[string]string{
-				"error_code": "400_002",
-			},
-		)
+		err = pkg.RespondToBadRequest(w, "'face' FIELD NOT FOUND")
 		if err != nil {
 			h.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(data)
 		return
 	}
 	f, header, err := r.FormFile("face")
@@ -103,33 +90,21 @@ func (h *FacesHandlerv1) GetFace(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 	file_extension := pkg.GetFileExtention(header)
 	if file_extension == "" {
-		data, err := json.Marshal(
-			map[string]string{
-				"error_code": "400_003",
-			},
-		)
+		err = pkg.RespondToBadRequest(w, "INVALID FILE NAME")
 		if err != nil {
 			h.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(data)
 		return
 	}
 	if file_extension != "jpg" {
-		data, err := json.Marshal(
-			map[string]string{
-				"error_code": "400_004",
-			},
-		)
+		err = pkg.RespondToBadRequest(w, "UNSUPPORTED FORMAT")
 		if err != nil {
 			h.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(data)
 		return
 	}
 	new_file_id := uuid.NewString()
@@ -157,33 +132,21 @@ func (h *FacesHandlerv1) GetFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(recognized_faces) == 0 {
-		data, err := json.Marshal(
-			map[string]string{
-				"error_code": "400_005",
-			},
-		)
+		err = pkg.RespondToBadRequest(w, "NO FACE DETECTED")
 		if err != nil {
 			h.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(data)
 		return
 	}
 	if len(recognized_faces) > 1 {
-		data, err := json.Marshal(
-			map[string]string{
-				"error_code": "400_006",
-			},
-		)
+		err = pkg.RespondToBadRequest(w, "MORE THAN ONE FACE DETECTED")
 		if err != nil {
 			h.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(data)
 		return
 	}
 	descriptor, err := json.Marshal(recognized_faces[0].Descriptor)
@@ -216,7 +179,12 @@ func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "INVALID BODY")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	f, header, err := r.FormFile("face")
@@ -228,11 +196,22 @@ func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 	file_extension := pkg.GetFileExtention(header)
 	if file_extension == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "INVALID FILE NAME")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	if file_extension != "jpg" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "UNSUPPORTED FORMAT")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
 	}
 	new_file_id := uuid.NewString()
 	file_path := os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
@@ -259,13 +238,21 @@ func (h *FacesHandlerv1) CreateFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(recognized_faces) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("No face detected on image"))
+		err = pkg.RespondToBadRequest(w, "NO FACE DETECTED")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	if len(recognized_faces) > 1 {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Image must contain only one recognizable face"))
+		err = pkg.RespondToBadRequest(w, "MORE THAN ONE FACE DETECTED")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	descriptor, err := json.Marshal(recognized_faces[0].Descriptor)
@@ -310,18 +297,24 @@ func (h *FacesHandlerv1) UpdateFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	face_id := chi.URLParam(r, "face")
-	if face_id == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
 	if _, err := uuid.Parse(face_id); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "'face' PARAMETER IS NOT A UUID")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	targetted_face, err := h.faces_repo.GetFaceById(face_id, current_user["id"])
 	if err != nil {
 		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusNotFound)
+			err = pkg.RespondToBadRequest(w, "FACE NOT FOUND")
+			if err != nil {
+				h.logger.Error(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 		h.logger.Error(err)
@@ -331,23 +324,44 @@ func (h *FacesHandlerv1) UpdateFace(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "INVALID BODY")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	f, header, err := r.FormFile("face")
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "'face' FIELD NOT FOUND")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	defer f.Close()
 	file_extension := pkg.GetFileExtention(header)
 	if file_extension == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "INVALID FILE NAME")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	if file_extension != "jpg" {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "UNSUPPORTED FORMAT")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
 	}
 	new_file_id := uuid.NewString()
 	file_path := os.Getenv("UPLOAD_DIR") + new_file_id + "." + file_extension
@@ -378,11 +392,21 @@ func (h *FacesHandlerv1) UpdateFace(w http.ResponseWriter, r *http.Request) {
 		h.logger.Warn("Failed to remove a file: ", err.Error())
 	}
 	if len(recognized_faces) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "NO FACE DETECTED")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	if len(recognized_faces) > 1 {
-		w.WriteHeader(http.StatusBadRequest)
+		err = pkg.RespondToBadRequest(w, "MORE THAN ONE FACE DETECTED")
+		if err != nil {
+			h.logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	descriptor, err := json.Marshal(recognized_faces[0].Descriptor)
