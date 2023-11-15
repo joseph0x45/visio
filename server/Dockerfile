@@ -11,13 +11,13 @@ RUN go mod download && go mod verify
 
 COPY . .
 RUN apt-get update
-RUN apt-get -y install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev
+RUN apt-get -y install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev
 
 RUN go build -o /app .
 
-FROM debian:latest
+FROM ubuntu:latest
 RUN apt-get update
-RUN apt-get -y install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev wget
+RUN apt-get -y install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev wget
 
 COPY --from=builder /app /usr/local/bin/app
 RUN mkdir /usr/local/bin/assets
