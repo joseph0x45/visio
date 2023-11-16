@@ -93,7 +93,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	email, username, avatar, github_id := data["email"].(string), data["name"].(string), data["avatar_url"].(string), data["id"].(float64)
+	username, avatar, github_id := data["name"].(string), data["avatar_url"].(string), data["id"].(float64)
 	existing_user, err := h.user_repo.GetByGithubId(fmt.Sprintf("%.f", github_id))
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -102,7 +102,6 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 				Id:       new_user_id,
 				GithubId: fmt.Sprintf("%.f", github_id),
 				Username: username,
-				Email:    email,
 				Avatar:   avatar,
 			}
 			err = h.user_repo.InsertNewUser(new_user)
@@ -129,7 +128,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = h.user_repo.UpdateUserInfos(fmt.Sprintf("%.f", github_id), username, avatar, email)
+	err = h.user_repo.UpdateUserInfos(fmt.Sprintf("%.f", github_id), username, avatar)
 	if err != nil {
 		h.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)

@@ -4,10 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-
-	// "visio/models"
 	"visio/repositories"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/sirupsen/logrus"
 )
@@ -46,7 +43,6 @@ func (h *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 			"avatar":   user.Avatar,
 			"username": user.Username,
 			"plan":     user.Plan,
-			"email":    user.Email,
 		},
 	)
 	if err != nil {
