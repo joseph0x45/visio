@@ -47,8 +47,7 @@ func main() {
 	githubOauthConfig := &oauth2.Config{
 		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
 		ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-		// RedirectURL:  "https://api.getvisio.cloud/auth/callback",
-    RedirectURL:  "http://localhost:8080/auth/callback",
+		RedirectURL:  os.Getenv("GITHUB_REDIRECT_URL"),
 		Scopes:       []string{"user:email"},
 		Endpoint:     github.Endpoint,
 	}
