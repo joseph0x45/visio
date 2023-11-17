@@ -52,13 +52,13 @@ func (h *AuthHandler) RequestGithubAuth(w http.ResponseWriter, r *http.Request) 
 func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 		return
 	}
 	github_token, err := h.githubOauth_config.Exchange(r.Context(), code)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 		return
 	}
 	client := &http.Client{}
@@ -69,28 +69,28 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 		return
 	}
 	req.Header.Add("Authorization", "Bearer "+github_token.AccessToken)
 	response, err := client.Do(req)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 		return
 	}
 	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 		return
 	}
 	data := map[string]interface{}{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 		return
 	}
 	username, avatar, github_id := data["name"].(string), data["avatar_url"].(string), data["id"].(float64)
@@ -107,7 +107,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 			err = h.user_repo.InsertNewUser(new_user)
 			if err != nil {
 				h.logger.Error(err)
-				w.WriteHeader(http.StatusInternalServerError)
+				http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 				return
 			}
 			_, auth_token, err := h.token_auth.Encode(
@@ -117,7 +117,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 			)
 			if err != nil {
 				h.logger.Error(err)
-				w.WriteHeader(http.StatusInternalServerError)
+				http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 				return
 			}
 			redirection_url := fmt.Sprintf("%s/login?token=%s", os.Getenv("CONSOLE_URL"), auth_token)
@@ -125,13 +125,13 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 		return
 	}
 	err = h.user_repo.UpdateUserInfos(fmt.Sprintf("%.f", github_id), username, avatar)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 		return
 	}
 	_, auth_token, err := h.token_auth.Encode(
@@ -141,7 +141,7 @@ func (h *AuthHandler) GithubAuth(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		h.logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, fmt.Sprintf("%s/error", os.Getenv("CONSOLE_URL")), http.StatusTemporaryRedirect)
 		return
 	}
 	redirection_url := fmt.Sprintf("%s/login?token=%s", os.Getenv("CONSOLE_URL"), auth_token)
