@@ -6,11 +6,6 @@
 Visio is an opensource cloud based service that provides algorithms for face detection and recognition. It is still in active development and is not feature complete yet but is stable enough to be
 used in small to medium scale projects.
 
-## How it work
-I did not reinvent the wheel, Visio is currently based on go-face which is a go library that provides bindings for dlib. This can change anytime soon though. The end goal is to have a system as 
-performant as possible, a rewrite using a library that would not call C code from Go can happen at anytime, but for now I found go-face to be quicker to work with to get an MVP even though somewhat
-limited, for example on the type of images that it can process (only jpeg format is supported currently)
-
 ## Usage
 To get started with Visio, first go to the [website](https://getvisio.cloud) and authenticate using your github account. Then you will be redirected to the console. Once there, go to the `keys` tab
 and create an API key. You can now start calling Visio from your services using the API keys. For node users, a npm package should be on the way. Feel free to contribute to it :)
