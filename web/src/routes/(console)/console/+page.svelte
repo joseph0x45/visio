@@ -21,7 +21,7 @@
 				Visio's GitHub repo contains all the code and documentation you need to get started. Give us a star along the way ;)
 			</h1>
 		</a>
-		<a href="/keys" class="w-56 border shadow-xl rounded-xl p-5 flex flex-col gap-2">
+		<a href="/console/keys" class="w-56 border shadow-xl rounded-xl p-5 flex flex-col gap-2">
 			<h1>Manage API keys</h1>
 			<hr />
 			<h1 class="text-gray-500">
