@@ -13,7 +13,6 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
     }
   )
   if (response.status!=200){
-    console.log(response.status)
     throw redirect(301, "/")
   }
   const data = await response.json() as { avatar: string, email: string, username: string, plan: string }
