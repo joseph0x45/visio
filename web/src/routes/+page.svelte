@@ -51,7 +51,6 @@
 			</div>
 			<button
 				disabled={loading}
-				on:click={github_auth}
 				class="hidden lg:flex lg:flex-1 lg:justify-end"
 			>
 				<h1 class="text-sm font-semibold leading-6 text-gray-900">
@@ -82,6 +81,15 @@
 							href="https://discord.gg/9vDumSjK3F"
 							target="_blank">Discord</a
 						> to stay up to date and contribute
+					</h1>
+				</div>
+			</div>
+			<div class=" sm:mb-8 sm:flex sm:justify-center">
+				<div
+					class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20"
+				>
+					<h1>
+						Visio is unavailable at the moment. We will be back soon 🥲
 					</h1>
 				</div>
 			</div>
