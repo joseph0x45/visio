@@ -5,7 +5,7 @@
 
 <div class="">
 	<h1>Welcome to Visio. Where to go from here?</h1>
-	<div class="grid grid-cols-3 gap-2 p-10">
+	<div class="grid grid-rows-1 lg:grid-cols-3 gap-2 p-10">
 		<a href="https://discord.gg/rDNvUpct" target="_blank" class="w-56 border shadow-xl rounded-xl p-5 flex flex-col gap-2">
 			<h1>Join our Discord</h1>
 			<hr />
