@@ -38,7 +38,11 @@
 					target="_blank"
 					class="text-sm font-semibold leading-6 text-gray-900">GitHub</a
 				>
-				<a href="https://github.com/thewisepigeon/visio#readme" target="_blank" class="text-sm font-semibold leading-6 text-gray-900">Documentation</a>
+				<a
+					href="https://github.com/thewisepigeon/visio#readme"
+					target="_blank"
+					class="text-sm font-semibold leading-6 text-gray-900">Documentation</a
+				>
 				<a
 					href="https://discord.gg/9vDumSjK3F"
 					target="_blank"
@@ -68,7 +72,7 @@
 			/>
 		</div>
 		<div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
-			<div class="hidden sm:mb-8 sm:flex sm:justify-center">
+			<div class=" sm:mb-8 sm:flex sm:justify-center">
 				<div
 					class="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20"
 				>
@@ -89,6 +93,15 @@
 					Visio is an open source cloud based service that provides algorithms for face detection
 					and face recognition.
 				</p>
+				<button
+					disabled={loading}
+					on:click={github_auth}
+					class=" lg:flex lg:flex-1 m-2 lg:justify-end"
+				>
+					<h1 class="text-sm font-semibold leading-6 text-gray-900">
+						Log in with GitHub <span aria-hidden="true">&rarr;</span>
+					</h1>
+				</button>
 			</div>
 		</div>
 		<div
