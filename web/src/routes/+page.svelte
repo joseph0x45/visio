@@ -40,7 +40,7 @@
 				>
 				<a href="https://github.com/thewisepigeon/visio#readme" target="_blank" class="text-sm font-semibold leading-6 text-gray-900">Documentation</a>
 				<a
-					href="https://discord.gg/rDNvUpct"
+					href="https://discord.gg/9vDumSjK3F"
 					target="_blank"
 					class="text-sm font-semibold leading-6 text-gray-900">Discord</a
 				>
@@ -75,7 +75,7 @@
 					<h1>
 						Visio is still in active development. Join our <a
 							class="text-sm font-semibold leading-6 text-gray-900"
-							href="https://discord.gg/rDNvUpct"
+							href="https://discord.gg/9vDumSjK3F"
 							target="_blank">Discord</a
 						> to stay up to date and contribute
 					</h1>
