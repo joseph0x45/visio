@@ -98,7 +98,7 @@
 					on:click={github_auth}
 					class=" lg:flex lg:flex-1 m-2 lg:justify-end"
 				>
-					<h1 class="text-sm font-semibold leading-6 text-gray-900">
+					<h1 class="text-sm lg:hidden font-semibold leading-6 text-gray-900">
 						Log in with GitHub <span aria-hidden="true">&rarr;</span>
 					</h1>
 				</button>
