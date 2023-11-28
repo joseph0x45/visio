@@ -20,6 +20,7 @@
 # Go workspace file
 go.work
 # Binary file
+visio
 api
 # air temp folder
 tmp/
