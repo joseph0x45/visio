@@ -25,3 +25,5 @@ api
 # air temp folder
 tmp/
 .env
+# Goface models
+models/
