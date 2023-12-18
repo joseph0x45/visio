@@ -2,7 +2,6 @@
 
 ## VISIO IS CURRENTLY BEING REWRITTEN. JOIN THE [Discord](https://discord.gg/9vDumSjK3F) TO STAY UP TO DATE
 
-# VISIO
 ## Introduction
 Visio is an opensource cloud based service that provides algorithms for face detection and recognition. It is still in active development and is not feature complete yet but is stable enough to be
 used in small to medium scale projects.
