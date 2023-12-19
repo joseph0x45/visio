@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_DB: visio
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pwd
+    ports:
+      - "5432:5432"
+  
+  visio:
+    image: golang
+    container_name: server
+    volumes:
+      - ~/code/visio/server:/go/src/app 
+    depends_on:
+      - postgres
+    env_file:
+        - .env
+    ports:
+      - "8080:8080"
+    command: ["tail", "-f", "/dev/null"]
