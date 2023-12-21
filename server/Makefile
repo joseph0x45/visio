@@ -22,7 +22,6 @@ reboot-db: stop-db delete-db setup-db
 
 migrate:
 	@docker cp ./schema.sql postgres:/tmp/schema.sql
-	@docker exec -it postgres psql -U postgres -c "CREATE DATABASE visio;"
 	@docker exec -it postgres psql -U postgres -d visio -f /tmp/schema.sql
 	@echo "Database rebooted"
 
