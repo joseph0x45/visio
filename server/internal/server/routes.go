@@ -1,10 +1,12 @@
 package server
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"visio/internal/middlewares"
+
 	"github.com/go-chi/chi/v5"
 )
 
@@ -16,9 +18,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	})
 	logger := slog.New(jsonHandler)
 	loggingMiddleware := middlewares.NewLoggingMiddleware(logger)
-	r.Use(loggingMiddleware.Logging)
-	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello world"))
+	r.Use(loggingMiddleware.SpamFilter)
+	r.Use(loggingMiddleware.RequestLogger)
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Hello from health")
+		w.WriteHeader(http.StatusOK)
 		return
 	})
 	return r

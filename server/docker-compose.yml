@@ -18,8 +18,8 @@ services:
       - ~/code/visio/server:/go/src/app 
     depends_on:
       - postgres
-    env_file:
-        - .env
+    # env_file:
+    #     - .env
     ports:
       - "8080:8080"
     command: ["tail", "-f", "/dev/null"]

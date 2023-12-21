@@ -1,7 +1,7 @@
 .PHONY: setup-db stop-db delete-db reboot-db
 
 build:
-	@go build -o server ./cmd/api/main.go
+	@go build -o server ./main.go
 
 run-dev:
 	@go run main.go
