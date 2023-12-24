@@ -10,6 +10,12 @@ services:
       POSTGRES_PASSWORD: pwd
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
   
   visio:
     image: golang
@@ -18,8 +24,6 @@ services:
       - ~/code/visio/server:/go/src/app 
     depends_on:
       - postgres
-    # env_file:
-    #     - .env
     ports:
       - "8080:8080"
     command: ["tail", "-f", "/dev/null"]
