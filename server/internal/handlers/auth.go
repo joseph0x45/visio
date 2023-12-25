@@ -27,6 +27,10 @@ func NewAuthHandler(usersStore *store.Users, logger *slog.Logger, tokenAuth *jwt
 	}
 }
 
+func (h *AuthHandler) GithubAuthCallback(w http.ResponseWriter, r *http.Request){
+
+}
+
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	requestId := r.Context().Value("requestId").(string)
 	payload := new(struct {
