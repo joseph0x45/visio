@@ -62,14 +62,13 @@ func GetUserData(token string) (*UserData, error) {
 	if err != nil {
 		return userData, fmt.Errorf("Error while creating http request: %w", err)
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return userData, fmt.Errorf("Error while sending http request: %w", err)
 	}
 	defer response.Body.Close()
 	responseBody, err := io.ReadAll(response.Body)
-  fmt.Println(string(responseBody))
 	if err != nil {
 		return userData, fmt.Errorf("Error while reading response body: %w", err)
 	}
@@ -89,7 +88,7 @@ func GetUserPrimaryEmail(token string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error while creating http request: %w", err)
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("Accept", "application/json")
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {

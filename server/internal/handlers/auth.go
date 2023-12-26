@@ -23,7 +23,6 @@ func NewAuthHandler(usersStore *store.Users, logger *slog.Logger) *AuthHandler {
 }
 
 func (h *AuthHandler) GithubAuthCallback(w http.ResponseWriter, r *http.Request) {
-  println("received request")
 	code := r.URL.Query().Get("code")
 	error := r.URL.Query().Get("error")
 	if error != "" {
@@ -34,30 +33,34 @@ func (h *AuthHandler) GithubAuthCallback(w http.ResponseWriter, r *http.Request)
 	accessToken, err := pkg.GetToken(code)
 	if err != nil {
 		h.logger.Error(err.Error())
+		println("err 1")
+		http.Redirect(w, r, fmt.Sprintf("http://localhost:5173/error"), http.StatusTemporaryRedirect)
 		return
 	}
 	userData, err := pkg.GetUserData(accessToken)
 	if err != nil {
 		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
+		println("err 2")
+		http.Redirect(w, r, fmt.Sprintf("http://localhost:5173/error"), http.StatusTemporaryRedirect)
 		return
 	}
-	test := userData.Email == ""
-	h.logger.Info(fmt.Sprintf("%v", test))
-  h.logger.Info(userData.Email)
 	if userData.Email == "" {
 		userData.Email, err = pkg.GetUserPrimaryEmail(accessToken)
 		if err != nil {
 			if errors.Is(err, types.ErrNoPrimaryEmailFound) {
 				h.logger.Error("No primary email found for ser")
-				w.WriteHeader(http.StatusInternalServerError)
+				println("err 3")
+				http.Redirect(w, r, fmt.Sprintf("http://localhost:5173/error"), http.StatusTemporaryRedirect)
 				return
 			}
 			h.logger.Error(err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
+			println("err 4")
+			http.Redirect(w, r, fmt.Sprintf("http://localhost:5173/error"), http.StatusTemporaryRedirect)
 			return
 		}
 	}
-	w.WriteHeader(http.StatusOK)
+	sessionId := "yay"
+	println("going there")
+	http.Redirect(w, r, fmt.Sprintf("http://localhost:5173/login?session=%s", sessionId), http.StatusTemporaryRedirect)
 	return
 }
