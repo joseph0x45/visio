@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"log/slog"
@@ -38,13 +37,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Hello from health")
-		w.WriteHeader(http.StatusOK)
-		return
-	})
 
 	r.Route("/auth", func(r chi.Router) {
+		r.Get("/url", authHandler.GetAuthURL)
 		r.Get("/callback", authHandler.GithubAuthCallback)
 	})
 	return r

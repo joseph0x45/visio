@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 	"visio/internal/store"
 	"visio/internal/types"
@@ -27,8 +29,25 @@ func NewAuthHandler(usersStore *store.Users, sessionsStore *store.Sessions, logg
 	}
 }
 
-func (h *AuthHandler) GetAuthURL(w http.ResponseWriter, r *http.Request){
-
+func (h *AuthHandler) GetAuthURL(w http.ResponseWriter, r *http.Request) {
+	url := fmt.Sprintf(
+		"https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s",
+		os.Getenv("GH_CLIENT_ID"),
+		os.Getenv("GH_REDIRECT_URI"),
+	)
+	data, err := json.Marshal(
+		map[string]string{
+			"url": url,
+		},
+	)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
 }
 
 func (h *AuthHandler) GithubAuthCallback(w http.ResponseWriter, r *http.Request) {
