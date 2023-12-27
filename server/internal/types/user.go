@@ -4,7 +4,8 @@ import "time"
 
 type User struct {
 	Id         string    `json:"id" db:"id"`
-	Email      string    `json:"email" db:"email"`
-	Password   string    `json:"password" db:"password"`
+	GithubId   string    `json:"github_id" db:"github_id"`
+	Username   string    `json:"username" db:"username"`
+	Avatar     string    `json:"avatar" db:"avatar"`
 	SignupDate time.Time `json:"signup_date" db:"signup_date"`
 }

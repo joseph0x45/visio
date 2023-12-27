@@ -12,7 +12,6 @@ import (
 )
 
 type UserData struct {
-	Email  string  `json:"email"`
 	Avatar string  `json:"avatar_url"`
 	Login  string  `json:"login"`
 	Id     float64 `json:"id"`

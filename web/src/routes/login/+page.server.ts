@@ -3,6 +3,7 @@ import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
   const session = url.searchParams.get("session") ?? ""
+  console.log("Session from backend ", session)
   if (session == "") {
     throw redirect(302, "/")
   }

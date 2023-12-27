@@ -1,9 +1,11 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"visio/internal/types"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Users struct {
@@ -19,22 +21,36 @@ func NewUsersStore(db *sqlx.DB) *Users {
 func (s *Users) Insert(user *types.User) error {
 	_, err := s.db.NamedExec(
 		`
-    insert into users(id, email, password, signup_date)
-    values (:id, :email, :password, :signup_date)
+      insert into users(id, github_id, username, avatar, signup_date)
+      values (:id, :github_id, :username, :avatar, :signup_date)
     `,
 		user,
 	)
-	return fmt.Errorf("Error while inserting new user: %w", err)
+	if err != nil {
+		return fmt.Errorf("Error while inserting new user: %w", err)
+	}
+	return nil
 }
 
-func (s *Users) CountByEmail(email string) (int, error) {
-	count := 0
-	err := s.db.QueryRowx(
-		"select count(*) from users where email=$1",
-		email,
-	).Scan(&count)
+func (s *Users) GetByGithubId(id string) (*types.User, error) {
+	dbUser := new(types.User)
+	err := s.db.Get(dbUser, "select * from users where github_id=$1", id)
 	if err != nil {
-		return count, fmt.Errorf("Error while counting users by email: %w", err)
+		if err == sql.ErrNoRows {
+			return nil, types.ErrNoUserFound
+		}
+		return nil, fmt.Errorf("Error while querying user from database: %w", err)
 	}
-	return count, nil
+	return dbUser, nil
+}
+
+func (s *Users) UpdateUserData(id, username, avatar string) error {
+	_, err := s.db.Exec(
+		"update users set username=$1, avatar=$2 where id=$3",
+		username, avatar, id,
+	)
+	if err != nil {
+		return fmt.Errorf("Error while updating user data: %w", err)
+	}
+	return nil
 }

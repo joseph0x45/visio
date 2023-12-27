@@ -2,34 +2,34 @@ package server
 
 import (
 	"fmt"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"log/slog"
 	"net/http"
 	"os"
 	"visio/internal/database"
 	"visio/internal/handlers"
-	// "visio/internal/middlewares"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
+	"visio/internal/middlewares"
 	"visio/internal/store"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
 	pgPool := database.NewPostgresPool()
+	redisClient := database.GetRedisClient()
 	usersStore := store.NewUsersStore(pgPool)
+	sessionsStore := store.NewSessionsStore(redisClient)
 	jsonHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
 		AddSource: true,
 	})
 	logger := slog.New(jsonHandler)
-	// loggingMiddleware := middlewares.NewLoggingMiddleware(logger)
+	loggingMiddleware := middlewares.NewLoggingMiddleware(logger)
 
-	authHandler := handlers.NewAuthHandler(usersStore, logger)
+	authHandler := handlers.NewAuthHandler(usersStore, sessionsStore, logger)
 
 	r := chi.NewRouter()
 	// r.Use(loggingMiddleware.SpamFilter)
-	// r.Use(loggingMiddleware.RequestLogger)
-	r.Use(middleware.Logger)
+	r.Use(loggingMiddleware.RequestLogger)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
