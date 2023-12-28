@@ -22,25 +22,27 @@ func (s *Server) RegisterRoutes() http.Handler {
 		AddSource: true,
 	})
 	logger := slog.New(jsonHandler)
-	loggingMiddleware := middlewares.NewLoggingMiddleware(logger)
-
+	middlewareService := middlewares.NewMiddlewareService(logger, usersStore, sessionsStore)
 	authHandler := handlers.NewAuthHandler(usersStore, sessionsStore, logger)
 
 	r := chi.NewRouter()
-	// r.Use(loggingMiddleware.SpamFilter)
-	r.Use(loggingMiddleware.RequestLogger)
+	r.Use(middlewareService.RequestLogger)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
 	r.Route("/auth", func(r chi.Router) {
-		r.Get("/url", authHandler.GetAuthURL)
 		r.Get("/callback", authHandler.GithubAuthCallback)
+		r.Group(func(r chi.Router) {
+			r.Use(middlewareService.SpamFilter)
+			r.Get("/url", authHandler.GetAuthURL)
+			r.With(middlewareService.Authenticate).Get("/user", authHandler.GetUserInfo)
+		})
 	})
 	return r
 }

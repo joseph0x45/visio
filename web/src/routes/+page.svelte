@@ -4,10 +4,13 @@
 	import { API_URL } from '$lib/config';
 	async function githubAuth() {
 		try {
-			const response = await fetch(`${API_URL}/auth/url`);
+			const response = await fetch(`${API_URL}/auth/url`, {
+				credentials: 'include'
+			});
 			if (response.status == 200) {
 				const { url } = (await response.json()) as { url: string };
-				goto(url);
+				console.log(url);
+				//goto(url);
 				return;
 			}
 			console.log(`Error while fetching auth link: Expected HTTP 200 got ${response.status}`);
@@ -21,4 +24,6 @@
 
 <h1>Welcome to visio</h1>
 
-<button class="p-2 bg-gray-500 text-white rounded-md m-2" on:click={githubAuth}>Login with Github</button>
+<button class="p-2 bg-gray-500 text-white rounded-md m-2" on:click={githubAuth}
+	>Login with Github</button
+>
