@@ -25,5 +25,12 @@ migrate:
 	@docker exec -it postgres psql -U postgres -d visio -f /tmp/schema.sql
 	@echo "Migration successful"
 
+build-image:
+	@docker build -t visio-dev .
+
+push-image:
+	@docker tag visio-dev:latest thewisepigeon/visio-dev:latest
+	@docker push thewisepigeon/visio-dev:latest
+
 test:
 	@go test -v ./...
