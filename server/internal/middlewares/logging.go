@@ -7,64 +7,67 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 	"visio/internal/store"
 	"visio/internal/types"
-
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
 )
 
 type Middleware struct {
-	logger   *slog.Logger
-	users    *store.Users
-	sessions *store.Sessions
+	logger    *slog.Logger
+	users     *store.Users
+	tokenAuth *jwtauth.JWTAuth
 }
 
-func NewMiddlewareService(logger *slog.Logger, users *store.Users, sessions *store.Sessions) *Middleware {
+func NewMiddlewareService(logger *slog.Logger, users *store.Users, tokenAuth *jwtauth.JWTAuth) *Middleware {
 	return &Middleware{
-		logger:   logger,
-		users:    users,
-		sessions: sessions,
+		logger:    logger,
+		users:     users,
+		tokenAuth: tokenAuth,
 	}
 }
 
 func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionCookie, err := r.Cookie("session")
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		token := parts[1]
+		tokenData, err := m.tokenAuth.Decode(token)
 		if err != nil {
-			if err == http.ErrNoCookie {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			m.logger.Error(err.Error())
+			m.logger.Error(fmt.Sprintf("Error while decoding auth token: %v", err))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		sessionUser, err := m.sessions.Get(sessionCookie.Value)
-		if err != nil {
-			if errors.Is(err, types.ErrSessionNotFound) {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			m.logger.Error(err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
+		userId := tokenData.Subject()
+		if userId == "" {
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		dbUser, err := m.users.GetById(sessionUser)
+		dbUser, err := m.users.GetById(userId)
 		if err != nil {
 			if errors.Is(err, types.ErrUserNotFound) {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			m.logger.Error(err.Error())
+			m.logger.Error(fmt.Sprintf("Error while fetching user from database: %v", err))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		userData := map[string]string{
 			"id":       dbUser.Id,
 			"email":    dbUser.Email,
-			"username": dbUser.Username,
 			"avatar":   dbUser.Avatar,
+			"username": dbUser.Username,
 		}
 		ctx := context.WithValue(r.Context(), "currentUser", userData)
 		next.ServeHTTP(w, r.WithContext(ctx))

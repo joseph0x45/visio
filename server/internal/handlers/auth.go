@@ -4,57 +4,33 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 	"visio/internal/store"
 	"visio/internal/types"
 	"visio/pkg"
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 type AuthHandler struct {
-	users    *store.Users
-	sessions *store.Sessions
-	logger   *slog.Logger
+	users     *store.Users
+	tokenAuth *jwtauth.JWTAuth
+	logger    *slog.Logger
 }
 
-func NewAuthHandler(usersStore *store.Users, sessionsStore *store.Sessions, logger *slog.Logger) *AuthHandler {
+func NewAuthHandler(usersStore *store.Users, jwtAuth *jwtauth.JWTAuth, logger *slog.Logger) *AuthHandler {
 	return &AuthHandler{
-		users:    usersStore,
-		sessions: sessionsStore,
-		logger:   logger,
+		users:     usersStore,
+		tokenAuth: jwtAuth,
+		logger:    logger,
 	}
 }
 
 func (h *AuthHandler) GetAuthURL(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("session")
-	if err != nil {
-		if err != http.ErrNoCookie {
-			h.logger.Debug(fmt.Sprintf("Error while reading cookies from client: %v", err))
-		}
-		goto returnAuthURL
-	} else {
-		sessionId := sessionCookie.Value
-		sessionUser, err := h.sessions.Get(sessionId)
-		if err != nil {
-			if !errors.Is(err, types.ErrSessionNotFound) {
-				h.logger.Debug(err.Error())
-			}
-			goto returnAuthURL
-		}
-		_, err = h.users.GetById(sessionUser)
-		if err != nil {
-			if !errors.Is(err, types.ErrUserNotFound) {
-				h.logger.Error(err.Error())
-			}
-			goto returnAuthURL
-		}
-		http.Redirect(w, r, fmt.Sprintf("%s/dashboard", os.Getenv("WEB_APP_URL")), http.StatusPermanentRedirect)
-		return
-	}
-returnAuthURL:
 	url := fmt.Sprintf(
 		"https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s",
 		os.Getenv("GH_CLIENT_ID"),
@@ -136,14 +112,15 @@ func (h *AuthHandler) GithubAuthCallback(w http.ResponseWriter, r *http.Request)
 				http.Redirect(w, r, internalErrRedirect, http.StatusTemporaryRedirect)
 				return
 			}
-			sessionId := ulid.Make().String()
-			err = h.sessions.Create(sessionId, newUser.Id)
+			_, authToken, err := h.tokenAuth.Encode(map[string]interface{}{
+				"sub": newUser.Id,
+			})
 			if err != nil {
-				h.logger.Error(err.Error())
-				http.Redirect(w, r, internalErrRedirect, http.StatusTemporaryRedirect)
+				h.logger.Error(fmt.Sprintf("Error while encoding auth token: %v", err))
+				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			loginRedirect := fmt.Sprintf("%s/login?session=%s", webAppURL, sessionId)
+			loginRedirect := fmt.Sprintf("%s/login?token=%s", webAppURL, authToken)
 			http.Redirect(w, r, loginRedirect, http.StatusTemporaryRedirect)
 			return
 		}
@@ -157,14 +134,15 @@ func (h *AuthHandler) GithubAuthCallback(w http.ResponseWriter, r *http.Request)
 		http.Redirect(w, r, internalErrRedirect, http.StatusTemporaryRedirect)
 		return
 	}
-	sessionId := ulid.Make().String()
-	err = h.sessions.Create(sessionId, dbUser.Id)
+	_, authToken, err := h.tokenAuth.Encode(map[string]interface{}{
+		"sub": dbUser.Id,
+	})
 	if err != nil {
-		h.logger.Error(err.Error())
-		http.Redirect(w, r, internalErrRedirect, http.StatusTemporaryRedirect)
+		h.logger.Error(fmt.Sprintf("Error while encoding auth token: %v", err))
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	loginRedirect := fmt.Sprintf("%s/login?session=%s", webAppURL, sessionId)
+	loginRedirect := fmt.Sprintf("%s/login?token=%s", webAppURL, authToken)
 	http.Redirect(w, r, loginRedirect, http.StatusTemporaryRedirect)
 	return
 }

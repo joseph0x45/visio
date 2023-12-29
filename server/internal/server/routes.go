@@ -1,8 +1,6 @@
 package server
 
 import (
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/cors"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,29 +8,32 @@ import (
 	"visio/internal/handlers"
 	"visio/internal/middlewares"
 	"visio/internal/store"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
+	"github.com/go-chi/jwtauth/v5"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
 	pgPool := database.NewPostgresPool()
-	redisClient := database.GetRedisClient()
 	usersStore := store.NewUsersStore(pgPool)
-	sessionsStore := store.NewSessionsStore(redisClient)
+	jwtAuth := jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
 	jsonHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
 		AddSource: true,
 	})
 	logger := slog.New(jsonHandler)
-	middlewareService := middlewares.NewMiddlewareService(logger, usersStore, sessionsStore)
-	authHandler := handlers.NewAuthHandler(usersStore, sessionsStore, logger)
+	middlewareService := middlewares.NewMiddlewareService(logger, usersStore, jwtAuth)
+	authHandler := handlers.NewAuthHandler(usersStore, jwtAuth, logger)
 
 	r := chi.NewRouter()
 	r.Use(middlewareService.RequestLogger)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-VISIO-APP-IDENTIFIER"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
+		AllowCredentials: false,
 		MaxAge:           300,
 	}))
 

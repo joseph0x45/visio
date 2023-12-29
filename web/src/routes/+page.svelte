@@ -5,12 +5,13 @@
 	async function githubAuth() {
 		try {
 			const response = await fetch(`${API_URL}/auth/url`, {
-				credentials: 'include'
+				headers: {
+					'X-VISIO-APP-IDENTIFIER': 'app_identifier'
+				}
 			});
 			if (response.status == 200) {
 				const { url } = (await response.json()) as { url: string };
-				console.log(url);
-				//goto(url);
+				goto(url);
 				return;
 			}
 			console.log(`Error while fetching auth link: Expected HTTP 200 got ${response.status}`);
