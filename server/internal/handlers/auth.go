@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,8 +13,6 @@ import (
 	"visio/internal/store"
 	"visio/internal/types"
 	"visio/pkg"
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/oklog/ulid/v2"
 )
 
 type AuthHandler struct {
@@ -147,7 +147,7 @@ func (h *AuthHandler) GithubAuthCallback(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *AuthHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
-	currentUser, ok := r.Context().Value("currentUser").(map[string]interface{})
+	currentUser, ok := r.Context().Value("currentUser").(map[string]string)
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return

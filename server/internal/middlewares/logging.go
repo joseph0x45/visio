@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/google/uuid"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,8 +13,6 @@ import (
 	"time"
 	"visio/internal/store"
 	"visio/internal/types"
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/google/uuid"
 )
 
 type Middleware struct {
