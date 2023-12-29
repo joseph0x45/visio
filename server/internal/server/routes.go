@@ -10,6 +10,7 @@ import (
 	"visio/internal/store"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
 )
@@ -27,7 +28,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	authHandler := handlers.NewAuthHandler(usersStore, jwtAuth, logger)
 
 	r := chi.NewRouter()
-	r.Use(middlewareService.RequestLogger)
+	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
