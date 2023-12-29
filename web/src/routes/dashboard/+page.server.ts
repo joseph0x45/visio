@@ -10,11 +10,15 @@ type UserData = {
 }
 
 export const load: PageServerLoad = async ({ cookies }) => {
+  const token = cookies.get("token") ?? ""
+  if (token == "") {
+    throw redirect(302, "/?error=no_auth_cookie")
+  }
   try {
     const response = await fetch(`${API_URL}/auth/user`, {
-      credentials: "include",
       headers: {
-        "X-VISIO-APP-IDENTIFIER": "app_identifier"
+        "X-VISIO-APP-IDENTIFIER": "app_identifier",
+        "Authorization": `Bearer ${token}`
       }
     })
     if (response.status == 200) {
@@ -24,11 +28,10 @@ export const load: PageServerLoad = async ({ cookies }) => {
         data: userData
       }
     }
-    console.log(response.status)
-    return redirect(302, "/?error=goesbrrrrr")
+    console.log(`Got HTTP ${response.status} while requesting for user data`)
+    throw redirect(302, `/?error=http_${response.status}`)
   } catch (error) {
-    console.log("Error while fetching user data: ")
-    console.log(error)
-    throw redirect(302, "/?context=internal")
+    console.log("Error while making HTTP request ", error)
+    throw redirect(302, "/?error=internal")
   }
 }
