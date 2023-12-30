@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,41 +11,38 @@ import (
 	"visio/internal/store"
 	"visio/internal/types"
 	"visio/pkg"
+	"github.com/gofiber/fiber/v2"
+	"github.com/oklog/ulid/v2"
 )
 
 type AuthHandler struct {
 	users     *store.Users
-	tokenAuth *jwtauth.JWTAuth
 	logger    *slog.Logger
 }
 
-func NewAuthHandler(usersStore *store.Users, jwtAuth *jwtauth.JWTAuth, logger *slog.Logger) *AuthHandler {
+func NewAuthHandler(usersStore *store.Users, logger *slog.Logger) *AuthHandler {
 	return &AuthHandler{
 		users:     usersStore,
-		tokenAuth: jwtAuth,
 		logger:    logger,
 	}
 }
 
-func (h *AuthHandler) GetAuthURL(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) GetAuthURL(c *fiber.Ctx) error {
 	url := fmt.Sprintf(
 		"https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s",
 		os.Getenv("GH_CLIENT_ID"),
 		os.Getenv("GH_REDIRECT_URI"),
 	)
-	data, err := json.Marshal(
-		map[string]string{
-			"url": url,
-		},
-	)
-	if err != nil {
-		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	response := struct {
+		URL string `json:"url"`
+	}{
+		URL: url,
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
-	return
+	if err := c.Status(fiber.StatusOK).JSON(response); err != nil {
+		h.logger.Error(err.Error())
+		return c.SendStatus(fiber.ErrInternalServerError.Code)
+	}
+	return nil
 }
 
 func (h *AuthHandler) GithubAuthCallback(w http.ResponseWriter, r *http.Request) {
@@ -146,19 +141,14 @@ func (h *AuthHandler) GithubAuthCallback(w http.ResponseWriter, r *http.Request)
 	return
 }
 
-func (h *AuthHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
-	currentUser, ok := r.Context().Value("currentUser").(map[string]string)
+func (h *AuthHandler) GetUserInfo(c *fiber.Ctx) error {
+	currentUser, ok := c.Context().Value("currentUser").(map[string]string)
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
+		return c.SendStatus(fiber.ErrUnauthorized.Code)
 	}
-	userData, err := json.Marshal(currentUser)
-	if err != nil {
+	if err := c.Status(fiber.StatusOK).JSON(currentUser); err != nil {
 		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return c.SendStatus(fiber.ErrInternalServerError.Code)
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(userData)
-	return
+	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-chi/jwtauth/v5"
 	"github.com/google/uuid"
 	"log/slog"
 	"net/http"
@@ -18,14 +17,12 @@ import (
 type Middleware struct {
 	logger    *slog.Logger
 	users     *store.Users
-	tokenAuth *jwtauth.JWTAuth
 }
 
-func NewMiddlewareService(logger *slog.Logger, users *store.Users, tokenAuth *jwtauth.JWTAuth) *Middleware {
+func NewMiddlewareService(logger *slog.Logger, users *store.Users) *Middleware {
 	return &Middleware{
 		logger:    logger,
 		users:     users,
-		tokenAuth: tokenAuth,
 	}
 }
 
