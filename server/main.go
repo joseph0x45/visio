@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"os"
-	"visio/internal/server"
 )
 
 func main() {
@@ -15,9 +15,13 @@ func main() {
 			panic(err)
 		}
 	}
-	server := server.NewServer()
-	fmt.Println("Server started on ", os.Getenv("PORT"))
-	err := server.ListenAndServe()
+	app := fiber.New()
+	port := os.Getenv("PORT")
+	if port == "" {
+		panic("Unable to read PORT environment variable")
+	}
+	fmt.Printf("Server listening on port %s", port)
+	err := app.Listen(fmt.Sprintf(":%s", port))
 	if err != nil {
 		panic(err)
 	}
