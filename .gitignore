@@ -7,3 +7,9 @@
 *.out
 go.work
 server
+vendor
+main
+.env
+tmp/
+htmx.min.js
+public/output.css

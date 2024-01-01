@@ -21,7 +21,7 @@ services:
     image: golang
     container_name: server
     volumes:
-      - ~/code/visio/server:/go/src/app 
+      - ~/code/visio/:/go/src/app 
     depends_on:
       - postgres
     ports:
