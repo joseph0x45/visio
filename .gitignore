@@ -1,2 +1,9 @@
-.bruno
-accounts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+server
