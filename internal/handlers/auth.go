@@ -39,7 +39,7 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.ErrInternalServerError.Code)
 	}
 	switch action {
-	case "register":
+	case "Register":
 		count, err := h.users.CountByEmail(reqPayload.Email)
 		if err != nil {
 			h.logger.Error(err.Error())
@@ -65,7 +65,7 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 			return c.SendStatus(fiber.ErrInternalServerError.Code)
 		}
 		return c.SendStatus(fiber.StatusCreated)
-	case "login":
+	case "Login":
 		dbUser, err := h.users.GetByEmail(reqPayload.Email)
 		if err != nil {
 			if errors.Is(err, types.ErrUserNotFound) {
