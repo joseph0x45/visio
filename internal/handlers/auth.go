@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
 	"visio/internal/store"
 	"visio/internal/types"
@@ -14,14 +15,16 @@ import (
 )
 
 type AuthHandler struct {
-	users  *store.Users
-	logger *slog.Logger
+	users    *store.Users
+	logger   *slog.Logger
+	sessions *store.Sessions
 }
 
-func NewAuthHandler(usersStore *store.Users, logger *slog.Logger) *AuthHandler {
+func NewAuthHandler(usersStore *store.Users, sessionsStore *store.Sessions, logger *slog.Logger) *AuthHandler {
 	return &AuthHandler{
-		users:  usersStore,
-		logger: logger,
+		users:    usersStore,
+		sessions: sessionsStore,
+		logger:   logger,
 	}
 }
 
@@ -64,7 +67,19 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 			h.logger.Error(err.Error())
 			return c.SendStatus(fiber.ErrInternalServerError.Code)
 		}
-		return c.SendStatus(fiber.StatusCreated)
+		sessionId := ulid.Make().String()
+		err = h.sessions.Create(sessionId, newUser.Id)
+		if err != nil {
+			h.logger.Error(err.Error())
+			c.Set("X-Err-Context", "ERR_SESSION_CREATION")
+			return c.SendStatus(fiber.ErrInternalServerError.Code)
+		}
+		authCookie := &fiber.Cookie{
+			Name:  "session",
+			Value: sessionId,
+		}
+		c.Cookie(authCookie)
+		return c.Redirect("/home", http.StatusTemporaryRedirect)
 	case "Login":
 		dbUser, err := h.users.GetByEmail(reqPayload.Email)
 		if err != nil {
@@ -78,7 +93,19 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 			fmt.Print("bad pwd\n")
 			return c.SendStatus(fiber.ErrBadRequest.Code)
 		}
-		return c.SendStatus(fiber.StatusOK)
+		sessionId := ulid.Make().String()
+		err = h.sessions.Create(sessionId, dbUser.Id)
+		if err != nil {
+			h.logger.Error(err.Error())
+			c.Set("X-Err-Context", "ERR_SESSION_CREATION")
+			return c.SendStatus(fiber.ErrInternalServerError.Code)
+		}
+		authCookie := &fiber.Cookie{
+			Name:  "session",
+			Value: sessionId,
+		}
+		c.Cookie(authCookie)
+		return c.Redirect("/home", http.StatusTemporaryRedirect)
 	}
 	return c.SendStatus(fiber.ErrBadRequest.Code)
 }
