@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"visio/internal/handlers"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/template/html/v2"
 	"github.com/joho/godotenv"
-	"os"
 )
 
 type (
@@ -25,6 +27,7 @@ func main() {
 		}
 	}
 	hosts := map[string]*Host{}
+	appHandler := handlers.NewAppHandler()
 
 	api := fiber.New()
 	api.Use(logger.New())
@@ -44,11 +47,8 @@ func main() {
 
 	hosts["127.0.0.1:8080"] = &Host{app}
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.Render("index", fiber.Map{
-			"Hello": "Bozo",
-		})
-	})
+	app.Get("/", appHandler.GetLandingPage)
+	app.Get("/auth", appHandler.GetAuthPage)
 
 	server := fiber.New()
 	server.Use(func(c *fiber.Ctx) error {

@@ -13,3 +13,4 @@ main
 tmp/
 htmx.min.js
 public/output.css
+node_modules
