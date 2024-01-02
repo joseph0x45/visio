@@ -74,7 +74,8 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 			h.logger.Error(err.Error())
 			return c.SendStatus(fiber.ErrInternalServerError.Code)
 		}
-		if !pkg.PasswordMatches(dbUser.Password, reqPayload.Password) {
+		if !pkg.PasswordMatches(reqPayload.Password, dbUser.Password) {
+			fmt.Print("bad pwd\n")
 			return c.SendStatus(fiber.ErrBadRequest.Code)
 		}
 		return c.SendStatus(fiber.StatusOK)
