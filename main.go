@@ -43,6 +43,7 @@ func main() {
 
 	app.Get("/", appHandler.GetLandingPage)
 	app.Get("/auth", appHandler.GetAuthPage)
+	app.Get("/home", appHandler.GetHomePage)
 	api := app.Group("/api")
 	api.Post("/auth", authHandler.Signup)
 

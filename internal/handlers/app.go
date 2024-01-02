@@ -16,3 +16,7 @@ func (h *AppHandler) GetLandingPage(c *fiber.Ctx) error {
 func (h *AppHandler) GetAuthPage(c *fiber.Ctx) error {
 	return c.Render("auth", fiber.Map{})
 }
+
+func (h *AppHandler) GetHomePage(c *fiber.Ctx) error {
+	return c.Render("home", fiber.Map{})
+}
