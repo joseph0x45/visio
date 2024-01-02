@@ -1,6 +1,6 @@
 module visio
 
-go 1.21
+go 1.21.5
 
 require (
 	github.com/andybalholm/brotli v1.0.6 // indirect
