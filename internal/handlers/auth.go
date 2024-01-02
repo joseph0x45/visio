@@ -29,13 +29,13 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 		h.logger.Error(fmt.Sprintf("Error while parsing body: %v", err))
 		return c.SendStatus(fiber.ErrInternalServerError.Code)
 	}
-	count, err := h.users.CountByEmail(reqPayload.Email)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.ErrInternalServerError.Code)
-	}
-	if count != 0 {
-		return c.SendStatus(fiber.ErrConflict.Code)
-	}
+	// count, err := h.users.CountByEmail(reqPayload.Email)
+	// if err != nil {
+	// 	h.logger.Error(err.Error())
+	// 	return c.SendStatus(fiber.ErrInternalServerError.Code)
+	// }
+	// if count != 0 {
+	// 	return c.SendStatus(fiber.ErrConflict.Code)
+	// }
 	return nil
 }

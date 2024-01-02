@@ -2,19 +2,43 @@
   <title>Visio | Authenticate</title>
 </head>
 
-<div class="h-screen w-full flex flex-col items-center justify-center">
-  <div>
-    <label class="form-control w-full max-w-xs">
-      <div class="label">
-        <span class="label-text">Your email</span>
+<div class="w-full h-screen flex flex-col items-center justify-center">
+  
+  <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-lg text-center">
+      <h1 class="text-2xl font-bold sm:text-3xl">Get started today!</h1>
+    </div>
+
+    <form hx-post="/api/auth" hx-target="#response" class="mx-auto mb-0 mt-8 max-w-md space-y-4">
+      <div>
+        <label for="email" class="sr-only">Email</label>
+
+        <div class="relative">
+          <input autocomplete="off" type="email" name="email" required class="w-full lg:w-96 rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
+          placeholder="Enter email" />
+        </div>
       </div>
-      <input type="text" placeholder="A cool email" class="input input-bordered w-full max-w-xs" />
-    </label>
-    <label class="form-control w-full max-w-xs">
-      <div class="label">
-        <span class="label-text">Your password</span>
+
+      <div>
+        <label for="password" class="sr-only">Password</label>
+        <div class="relative">
+          <input type="password" required class="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
+          placeholder="Enter password" />
+        </div>
       </div>
-      <input type="password" placeholder="A cool email" class="input input-bordered w-full max-w-xs" />
-    </label>
+
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-gray-500">
+        No account?
+        <a class="underline" href="">Sign up</a>
+        </p>
+        <button type="submit" class="inline-block rounded-lg bg-black px-5 py-3 text-sm font-medium text-white">
+          Sign in
+        </button>
+      </div>
+    </form>
+  </div>
+  <div id="response">
+    
   </div>
 </div>
