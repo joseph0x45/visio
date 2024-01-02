@@ -2,8 +2,7 @@
   <title>Visio | Authenticate</title>
 </head>
 
-<div x-data="{ email:'', password:'', loading: false, action:'login' }"
-  class="w-full h-screen flex flex-col items-center justify-center">
+<div x-data="init()" class="w-full h-screen flex flex-col items-center justify-center">
   <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-lg text-center">
       <h1 class="text-2xl font-bold sm:text-3xl">Get started today!</h1>
@@ -25,12 +24,12 @@
       </div>
       <div class="flex items-center justify-between">
         <p class="text-sm text-gray-500">
-          No account?
-          <a class="underline" href="">Sign up</a>
+          <button class="flex" @click="switchAction($data)" type="button">
+            <h1 class="underline" x-text="alternateAction"></h1>
+          </button>
         </p>
-        <button x-bind:disabled="loading" type="button" @click="authenticate($data)"
+        <button x-text="action" x-bind:disabled="loading" type="button" @click="authenticate($data)"
           class="inline-block rounded-lg bg-black px-5 py-3 text-sm font-medium text-white">
-          Sign in
         </button>
       </div>
     </div>
@@ -38,20 +37,40 @@
 </div>
 
 <script>
-  async function authenticate({email, password, action}) {
-    Alpine.data('loading', true)
-    const data = JSON.stringify({email, password})
-    console.log(data)
-    const response = await fetch(
-      `/api/auth?action=${action}`,
-      {
-        method: "POST",
-        body: data,
-        headers: {
-          "Content-Type": "application/json"
+  function init() {
+    return {
+      loading: false,
+      email: "",
+      password: "",
+      action: "Login",
+      alternateAction: "No account? Register",
+      switchAction: function () {
+        if (this.action == "Login") {
+          this.action = "Register"
+          this.alternateAction = "Got an account? Login"
+          return
         }
+        if (this.action == "Register") {
+          this.action = "Login"
+          this.alternateAction = "No account? Register"
+          return
+        }
+      },
+      authenticate: async function ({email, password, action}) {
+        const data = JSON.stringify({email, password})
+        console.log(data)
+        const response = await fetch(
+          `/api/auth?action=${action}`,
+          {
+            method: "POST",
+            body: data,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+        console.log(response.status)
       }
-    )
-    console.log(response.status)
+    }
   }
 </script>
