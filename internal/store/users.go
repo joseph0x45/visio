@@ -43,6 +43,18 @@ func (s *Users) GetById(id string) (*types.User, error) {
 	return dbUser, nil
 }
 
+func (s *Users) GetByEmail(email string) (*types.User, error) {
+	dbUser := new(types.User)
+	err := s.db.Get(dbUser, "select * from users where email=$1", email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, types.ErrUserNotFound
+		}
+		return nil, fmt.Errorf("Error while querying user from database by email: %w", err)
+	}
+	return dbUser, nil
+}
+
 func (s *Users) CountByEmail(email string) (int, error) {
 	count := 0
 	err := s.db.QueryRowx("select count(*) from users where email=$1", email).Scan(&count)

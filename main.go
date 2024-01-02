@@ -24,10 +24,12 @@ func main() {
 	}
 	appHandler := handlers.NewAppHandler()
 	postgresPool := database.NewPostgresPool()
-	usersStore := store.NewUsersStore(postgresPool)
+	redisClient := database.GetRedisClient()
+	users := store.NewUsersStore(postgresPool)
+	sessions := store.NewSessionsStore(redisClient)
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	appLogger := slog.New(textHandler)
-	authHandler := handlers.NewAuthHandler(usersStore, appLogger)
+	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
 
 	engine := html.New("./views", ".html")
 	engine.Reload(appEnv != "PROD")
@@ -41,6 +43,7 @@ func main() {
 
 	app.Get("/", appHandler.GetLandingPage)
 	app.Get("/auth", appHandler.GetAuthPage)
+	app.Get("/home", appHandler.GetHomePage)
 	api := app.Group("/api")
 	api.Post("/auth", authHandler.Signup)
 
