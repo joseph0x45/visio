@@ -5,14 +5,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/template/html/v2"
 	"github.com/joho/godotenv"
+	"log/slog"
 	"os"
-)
-
-type (
-	Host struct {
-		Fiber *fiber.App
-	}
+	"visio/internal/database"
+	"visio/internal/handlers"
+	"visio/internal/store"
 )
 
 func main() {
@@ -23,45 +22,33 @@ func main() {
 			panic(err)
 		}
 	}
-	hosts := map[string]*Host{}
+	appHandler := handlers.NewAppHandler()
+	postgresPool := database.NewPostgresPool()
+	usersStore := store.NewUsersStore(postgresPool)
+	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
+	appLogger := slog.New(textHandler)
+	authHandler := handlers.NewAuthHandler(usersStore, appLogger)
 
-	api := fiber.New()
-	api.Use(logger.New())
-	api.Use(recover.New())
-
-	hosts["api.localhost:8080"] = &Host{api}
-
-	api.Get("/", func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusOK)
+	engine := html.New("./views", ".html")
+	engine.Reload(appEnv != "PROD")
+	app := fiber.New(fiber.Config{
+		Views:       engine,
+		ViewsLayout: "layouts/main",
 	})
-
-	app := fiber.New()
+	app.Static("/public", "./public")
 	app.Use(logger.New())
 	app.Use(recover.New())
 
-	hosts["localhost:8080"] = &Host{app}
-
-	app.Get("/home", func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusOK)
-	})
-
-	server := fiber.New()
-	server.Use(func(c *fiber.Ctx) error {
-		host := hosts[c.Hostname()]
-		if host == nil {
-			return c.SendStatus(fiber.ErrNotFound.Code)
-		} else {
-			host.Fiber.Handler()(c.Context())
-			return nil
-		}
-	})
+	app.Get("/", appHandler.GetLandingPage)
+	app.Get("/auth", appHandler.GetAuthPage)
+	api := app.Group("/api")
+	api.Post("/auth", authHandler.Signup)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		panic("Unable to read PORT environment variable")
 	}
-	fmt.Printf("Server listening on port %s", port)
-	err := server.Listen(fmt.Sprintf(":%s", port))
+	err := app.Listen(fmt.Sprintf(":%s", port))
 	if err != nil {
 		panic(err)
 	}

@@ -3,9 +3,8 @@ package store
 import (
 	"database/sql"
 	"fmt"
-	"visio/internal/types"
-
 	"github.com/jmoiron/sqlx"
+	"visio/internal/types"
 )
 
 type Users struct {
@@ -21,8 +20,8 @@ func NewUsersStore(db *sqlx.DB) *Users {
 func (s *Users) Insert(user *types.User) error {
 	_, err := s.db.NamedExec(
 		`
-      insert into users(id, github_id, email, username, avatar, signup_date)
-      values (:id, :github_id, :email, :username, :avatar, :signup_date)
+      insert into users(id, email, password, signup_date)
+      values (:id, :email, :password, :signup_date)
     `,
 		user,
 	)
@@ -44,25 +43,11 @@ func (s *Users) GetById(id string) (*types.User, error) {
 	return dbUser, nil
 }
 
-func (s *Users) GetByGithubId(id string) (*types.User, error) {
-	dbUser := new(types.User)
-	err := s.db.Get(dbUser, "select * from users where github_id=$1", id)
+func (s *Users) CountByEmail(email string) (int, error) {
+	count := 0
+	err := s.db.QueryRowx("select count(*) from users where email=$1", email).Scan(&count)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, types.ErrUserNotFound
-		}
-		return nil, fmt.Errorf("Error while querying user from database: %w", err)
+		return 0, fmt.Errorf("Error while counting users by email: %w", err)
 	}
-	return dbUser, nil
-}
-
-func (s *Users) UpdateUserData(id, email, username, avatar string) error {
-	_, err := s.db.Exec(
-		"update users set username=$1, email=$2, avatar=$3 where id=$4",
-		username, email, avatar, id,
-	)
-	if err != nil {
-		return fmt.Errorf("Error while updating user data: %w", err)
-	}
-	return nil
+	return count, nil
 }

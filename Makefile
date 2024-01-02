@@ -32,5 +32,8 @@ push-image:
 	@docker tag visio-dev:latest thewisepigeon/visio-dev:latest
 	@docker push thewisepigeon/visio-dev:latest
 
+tailwind-compilation:
+	@npx tailwindcss -i ./assets/app.css -o ./public/output.css --watch
+
 test:
 	@go test -v ./...
