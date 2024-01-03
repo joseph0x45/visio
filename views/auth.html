@@ -57,6 +57,9 @@
         }
       },
       authenticate: async function ({email, password, action}) {
+        if (email == '' || password == '') {
+          return
+        }
         const data = JSON.stringify({email, password})
         console.log(data)
         const response = await fetch(
@@ -69,7 +72,24 @@
             }
           }
         )
-        console.log(response.status)
+        statusCode = response.status
+        switch (statusCode) {
+          case 400:
+            alert("Wrong credentials")
+            return
+          case 500:
+            alert("Something went wrong! Try again or contact support")
+            return
+          case 201:
+            alert("Account created! Redirecting you...")
+            window.location.href = "/home"
+          case 200:
+            alert("Login successful! Redirecting you...")
+            window.location.href = "/home"
+          default:
+            alert("Something went wrong! Try again or contact support")
+            return
+        }
       }
     }
   }

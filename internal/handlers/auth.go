@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"time"
 	"visio/internal/store"
 	"visio/internal/types"
@@ -79,7 +78,7 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 			Value: sessionId,
 		}
 		c.Cookie(authCookie)
-		return c.Redirect("/home", http.StatusTemporaryRedirect)
+		return c.SendStatus(fiber.StatusCreated)
 	case "Login":
 		dbUser, err := h.users.GetByEmail(reqPayload.Email)
 		if err != nil {
@@ -105,7 +104,7 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 			Value: sessionId,
 		}
 		c.Cookie(authCookie)
-		return c.Redirect("/home", http.StatusTemporaryRedirect)
+		return c.SendStatus(fiber.StatusOK)
 	}
 	return c.SendStatus(fiber.ErrBadRequest.Code)
 }
