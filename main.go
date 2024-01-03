@@ -2,16 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/template/html/v2"
-	"github.com/joho/godotenv"
 	"log/slog"
 	"os"
 	"visio/internal/database"
 	"visio/internal/handlers"
+	"visio/internal/middlewares"
 	"visio/internal/store"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/template/html/v2"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -30,6 +31,7 @@ func main() {
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	appLogger := slog.New(textHandler)
 	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
+	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
 
 	engine := html.New("./views", ".html")
 	engine.Reload(appEnv != "PROD")
@@ -38,14 +40,15 @@ func main() {
 		ViewsLayout: "layouts/main",
 	})
 	app.Static("/public", "./public")
-	app.Use(logger.New())
 	app.Use(recover.New())
 
-	app.Get("/", appHandler.GetLandingPage)
-	app.Get("/auth", appHandler.GetAuthPage)
-	app.Get("/home", appHandler.GetHomePage)
-	api := app.Group("/api")
-	api.Post("/auth", authHandler.Signup)
+	client := app.Group("/")
+	client.Get("/", appHandler.GetLandingPage)
+	client.Get("/auth", appHandler.GetAuthPage)
+	client.Get("/home", authMiddleware.CookieAuth, appHandler.GetHomePage)
+
+	server := app.Group("/api")
+	server.Post("/auth", authHandler.Signup)
 
 	port := os.Getenv("PORT")
 	if port == "" {
