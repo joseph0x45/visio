@@ -3,11 +3,11 @@ package tests
 import (
 	"errors"
 	"fmt"
+	"github.com/ory/dockertest/v3"
+	"github.com/redis/go-redis/v9"
 	"testing"
 	"visio/internal/store"
 	"visio/internal/types"
-	"github.com/ory/dockertest/v3"
-	"github.com/redis/go-redis/v9"
 )
 
 type testCase struct {
@@ -56,6 +56,13 @@ var testCases = []testCase{
 			return err
 		},
 		ExpectedErr: types.ErrSessionNotFound,
+	},
+	{
+		Name:      "Delete session",
+		SessionId: "Session1",
+		TestFunc: func(sessions *store.Sessions, tc *testCase) error {
+			return nil
+		},
 	},
 }
 
