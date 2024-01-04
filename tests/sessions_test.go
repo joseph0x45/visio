@@ -61,8 +61,17 @@ var testCases = []testCase{
 		Name:      "Delete session",
 		SessionId: "Session1",
 		TestFunc: func(sessions *store.Sessions, tc *testCase) error {
-			return nil
+			return sessions.Delete(tc.SessionId)
 		},
+		ExpectedErr: nil,
+	},
+	{
+		Name:      "Delete session using a non-existent id",
+		SessionId: "RandomId",
+		TestFunc: func(sessions *store.Sessions, tc *testCase) error {
+			return sessions.Delete(tc.SessionId)
+		},
+		ExpectedErr: nil,
 	},
 }
 
@@ -90,7 +99,7 @@ func TestSession(t *testing.T) {
 			t.Run(tc.Name, func(t *testing.T) {
 				err = tc.Run(sessions)
 				if !errors.Is(err, tc.ExpectedErr) {
-					t.Fatalf("Wanted %q got %q ", tc.ExpectedErr, err)
+					t.Fatalf("Wanted %s got %s ", tc.ExpectedErr, err)
 				}
 			})
 		}
