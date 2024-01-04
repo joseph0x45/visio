@@ -3,11 +3,19 @@ package tests
 import (
 	"errors"
 	"fmt"
+<<<<<<< HEAD
 	"github.com/ory/dockertest/v3"
 	"github.com/redis/go-redis/v9"
 	"testing"
 	"visio/internal/store"
 	"visio/internal/types"
+=======
+	"testing"
+	"visio/internal/store"
+	"visio/internal/types"
+	"github.com/ory/dockertest/v3"
+	"github.com/redis/go-redis/v9"
+>>>>>>> 9595607 (added tests folder)
 )
 
 type testCase struct {
@@ -57,6 +65,7 @@ var testCases = []testCase{
 		},
 		ExpectedErr: types.ErrSessionNotFound,
 	},
+<<<<<<< HEAD
 	{
 		Name:      "Delete session",
 		SessionId: "Session1",
@@ -73,6 +82,8 @@ var testCases = []testCase{
 		},
 		ExpectedErr: nil,
 	},
+=======
+>>>>>>> 9595607 (added tests folder)
 }
 
 func TestSession(t *testing.T) {
@@ -99,7 +110,11 @@ func TestSession(t *testing.T) {
 			t.Run(tc.Name, func(t *testing.T) {
 				err = tc.Run(sessions)
 				if !errors.Is(err, tc.ExpectedErr) {
+<<<<<<< HEAD
 					t.Fatalf("Wanted %s got %s ", tc.ExpectedErr, err)
+=======
+					t.Fatalf("Wanted %q got %q ", tc.ExpectedErr, err)
+>>>>>>> 9595607 (added tests folder)
 				}
 			})
 		}
