@@ -56,11 +56,11 @@
           return
         }
       },
-      authenticate: async function ({email, password, action}) {
+      authenticate: async function ({ email, password, action }) {
         if (email == '' || password == '') {
           return
         }
-        const data = JSON.stringify({email, password})
+        const data = JSON.stringify({ email, password })
         console.log(data)
         const response = await fetch(
           `/api/auth?action=${action}`,
