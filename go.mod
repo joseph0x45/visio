@@ -3,6 +3,7 @@ module visio
 go 1.21.5
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.1
 	github.com/gofiber/fiber/v2 v2.51.0
 	github.com/gofiber/template/html/v2 v2.0.5
 	github.com/jmoiron/sqlx v1.3.5
