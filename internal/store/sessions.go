@@ -50,8 +50,8 @@ func (s *Sessions) Delete(id string) error {
 		context.Background(),
 		id,
 	).Err()
-	if err == redis.Nil {
-		return types.ErrSessionNotFound
+	if err != nil {
+		return fmt.Errorf("Error while deleting session: %w", err)
 	}
-	return fmt.Errorf("Error while deleting session: %w", err)
+	return nil
 }
