@@ -2,11 +2,10 @@ package middlewares
 
 import (
 	"errors"
+	"github.com/gofiber/fiber/v2"
 	"log/slog"
 	"visio/internal/store"
 	"visio/internal/types"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type AuthMiddleware struct {
@@ -44,7 +43,6 @@ func (m *AuthMiddleware) CookieAuth(c *fiber.Ctx) error {
 		m.logger.Error(err.Error())
 		return c.Redirect("/auth", fiber.StatusFound)
 	}
-
 	c.Locals("currentUser", sessionUser)
 	return c.Next()
 }
