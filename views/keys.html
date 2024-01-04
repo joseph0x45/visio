@@ -1,0 +1,38 @@
+<!-- This is a dummy file for testing key functionality -->
+
+<head>
+    <title>Key Auth</title>
+</head>
+
+<main x-data="init()">
+    <section class="p-12">
+        <button class="border bg-black text-white p-2 rounded-md w-32 text-center" @click="createKey"
+            type="button">Create
+            API key</button>
+        <button class="border p-2 rounded-md w-32 text-center">Revoke API key</button>
+    </section>
+</main>
+
+
+<script>
+    function init() {
+        return {
+            createKey: async function () {
+                try {
+                    console.log("Creating key")
+                    const response = await fetch(
+                        `/api/key`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        }
+                    )
+                } catch (err) {
+                    console.log(err)
+                }
+            }
+        }
+    }
+</script>
