@@ -3,8 +3,9 @@ package store
 import (
 	"context"
 	"fmt"
-	"github.com/redis/go-redis/v9"
 	"visio/internal/types"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type Sessions struct {
@@ -49,8 +50,8 @@ func (s *Sessions) Delete(id string) error {
 		context.Background(),
 		id,
 	).Err()
-	if err != nil {
-		return fmt.Errorf("Error while deleting session: %w", err)
+	if err == redis.Nil {
+		return types.ErrSessionNotFound
 	}
-	return nil
+	return fmt.Errorf("Error while deleting session: %w", err)
 }
