@@ -1,10 +1,9 @@
-package tests
+package store
 
 import (
 	"errors"
 	"fmt"
 	"testing"
-	"visio/internal/store"
 	"visio/internal/types"
 
 	"github.com/ory/dockertest/v3"
@@ -15,11 +14,11 @@ type testCase struct {
 	Name         string
 	SessionId    string
 	SessionValue string
-	TestFunc     func(sessions *store.Sessions, tc *testCase) error
+	TestFunc     func(sessions *Sessions, tc *testCase) error
 	ExpectedErr  error
 }
 
-func (t *testCase) Run(sessions *store.Sessions) error {
+func (t *testCase) Run(sessions *Sessions) error {
 	return t.TestFunc(sessions, t)
 }
 
@@ -28,7 +27,7 @@ var testCases = []testCase{
 		Name:         "Create session",
 		SessionId:    "Session1",
 		SessionValue: "Session1Value",
-		TestFunc: func(sessions *store.Sessions, tc *testCase) error {
+		TestFunc: func(sessions *Sessions, tc *testCase) error {
 			return sessions.Create(tc.SessionId, tc.SessionValue)
 		},
 		ExpectedErr: nil,
@@ -37,7 +36,7 @@ var testCases = []testCase{
 		Name:         "Retrieve session using it's id",
 		SessionId:    "Session1",
 		SessionValue: "Session1Value",
-		TestFunc: func(sessions *store.Sessions, tc *testCase) error {
+		TestFunc: func(sessions *Sessions, tc *testCase) error {
 			sessionValue, err := sessions.Get(tc.SessionId)
 			if err != nil {
 				return err
@@ -52,7 +51,7 @@ var testCases = []testCase{
 	{
 		Name:      "Retrieve session using a non-existent id",
 		SessionId: "RandomId",
-		TestFunc: func(sessions *store.Sessions, tc *testCase) error {
+		TestFunc: func(sessions *Sessions, tc *testCase) error {
 			_, err := sessions.Get(tc.SessionId)
 			return err
 		},
@@ -79,7 +78,7 @@ func TestSession(t *testing.T) {
 		redisClient = redis.NewClient(&redis.Options{
 			Addr: fmt.Sprintf("localhost:%s", resource.GetPort("6379/tcp")),
 		})
-		sessions := store.NewSessionsStore(redisClient)
+		sessions := NewSessionsStore(redisClient)
 		for _, tc := range testCases {
 			t.Run(tc.Name, func(t *testing.T) {
 				err = tc.Run(sessions)
