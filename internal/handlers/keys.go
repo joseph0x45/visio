@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -40,7 +41,23 @@ func generateKey(length int) string {
 }
 
 func (h *KeyHandler) CreateKey(c *fiber.Ctx) error {
+	currentUser := c.Locals("currentUser").(*types.User)
+	const KEY_LIMIT = 3
+
 	// Check how many number of keys the user has already created
+	key_count, err := h.keys.CountByOwnerId(currentUser.Id)
+
+	fmt.Println("Key count", key_count)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	if key_count > KEY_LIMIT {
+		err := errors.New("Limit of keys exceeded")
+		h.logger.Error(err.Error())
+		return c.SendStatus(fiber.StatusForbidden)
+	}
 
 	// Generate prefix - ULID format
 	prefix := ulid.Make().String()
@@ -52,24 +69,25 @@ func (h *KeyHandler) CreateKey(c *fiber.Ctx) error {
 	hashedKey, err := pkg.Hash(key)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.ErrInternalServerError.Code)
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	currentUser := c.Locals("currentUser").(*types.User)
 	generatedKey := &types.Key{
-		Owner:           currentUser.Id,
+		KeyOwner:        currentUser.Id,
 		Prefix:          prefix,
-		Key:             key,
+		KeyHash:         hashedKey,
 		KeyCreationDate: time.Now().UTC(),
 	}
 
 	_ = hashedKey
-	fmt.Printf("%+v", generatedKey)
 
 	// Store key and prefix in DB
+	if err := h.keys.Insert(generatedKey); err != nil {
+		h.logger.Error(err.Error())
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
 
 	//Return key in format <prefix>.<key (unhased)> to user
-
-	finalKey := fmt.Sprintf("%s.%s", prefix, hashedKey)
+	finalKey := fmt.Sprintf("%s.%s", prefix, key)
 	return c.Send([]byte(finalKey))
 }
