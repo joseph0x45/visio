@@ -7,7 +7,7 @@ create table if not exists users (
 
 create table if not exists keys (
   key_owner text not null references users(id),
-  prefix varchar(26) not null unique primary key,
+  prefix text not null unique primary key,
   key_hash text not null unique,
   key_creation_date timestamp not null
 )

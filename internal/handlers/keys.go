@@ -41,7 +41,14 @@ func generateKey(length int) string {
 }
 
 func (h *KeyHandler) CreateKey(c *fiber.Ctx) error {
-	currentUser := c.Locals("currentUser").(*types.User)
+	currentUser, ok := c.Locals("currentUser").(*types.User)
+
+	if !ok {
+		err := errors.New("Error during currentUser type conversion")
+		h.logger.Error(err.Error())
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
 	const KEY_LIMIT = 3
 
 	// Check how many number of keys the user has already created
