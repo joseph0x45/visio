@@ -18,10 +18,12 @@ services:
       - "6379:6379"
   
   visio:
-    image: golang
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
     container_name: server
     volumes:
-      - ~/code/visio/:/go/src/app 
+      - ${CODE_DIR}:/go/src/app 
     depends_on:
       - postgres
     ports:
