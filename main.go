@@ -28,9 +28,11 @@ func main() {
 	redisClient := database.GetRedisClient()
 	users := store.NewUsersStore(postgresPool)
 	sessions := store.NewSessionsStore(redisClient)
+	keys := store.NewKeysStore(postgresPool)
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	appLogger := slog.New(textHandler)
 	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
+	keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
 	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
 
 	engine := html.New("./views", ".html")
@@ -46,9 +48,11 @@ func main() {
 	client.Get("/", appHandler.GetLandingPage)
 	client.Get("/auth", appHandler.GetAuthPage)
 	client.Get("/home", authMiddleware.CookieAuth, appHandler.GetHomePage)
+	client.Get("/manage-keys", appHandler.GetKeyPage)
 
 	server := app.Group("/api")
 	server.Post("/auth", authHandler.Signup)
+	server.Post("/key", authMiddleware.CookieAuth, keyHandler.CreateKey)
 
 	port := os.Getenv("PORT")
 	if port == "" {

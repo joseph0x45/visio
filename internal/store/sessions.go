@@ -3,8 +3,9 @@ package store
 import (
 	"context"
 	"fmt"
-	"github.com/redis/go-redis/v9"
 	"visio/internal/types"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type Sessions struct {
