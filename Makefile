@@ -33,7 +33,7 @@ push-image:
 	@docker push thewisepigeon/visio:latest
 
 tailwind-compilation:
-	@npx tailwindcss -i ./assets/app.css -o ./public/output.css --watch
+	@npx tailwindcss -i ./assets/app.css -o ./public/output.css --minify --watch
 
 test:
 	@go test -v ./...
