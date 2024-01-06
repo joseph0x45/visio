@@ -26,14 +26,14 @@ migrate:
 	@echo "Migration successful"
 
 build-image:
-	@docker build -t visio-dev .
+	@docker build -t visio:latest .
 
 push-image:
-	@docker tag visio-dev:latest thewisepigeon/visio-dev:latest
-	@docker push thewisepigeon/visio-dev:latest
+	@docker tag visio:latest thewisepigeon/visio:latest
+	@docker push thewisepigeon/visio:latest
 
 tailwind-compilation:
-	@npx tailwindcss -i ./assets/app.css -o ./public/output.css --watch
+	@npx tailwindcss -i ./assets/app.css -o ./public/output.css --minify --watch
 
 test:
 	@go test -v ./...

@@ -2,17 +2,16 @@ package main
 
 import (
 	"fmt"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/template/html/v2"
+	"github.com/joho/godotenv"
 	"log/slog"
 	"os"
 	"visio/internal/database"
 	"visio/internal/handlers"
 	"visio/internal/middlewares"
 	"visio/internal/store"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/template/html/v2"
-	"github.com/joho/godotenv"
 )
 
 func main() {
