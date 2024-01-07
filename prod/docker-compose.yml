@@ -3,25 +3,28 @@ version: '3'
 services:
   postgres:
     image: postgres
+    networks:
+        - proxymanager_default
     container_name: postgres
     environment:
       POSTGRES_DB: visio
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pwd
-    ports:
-      - "5432:5432"
 
   redis:
     image: redis
+    networks:
+        - proxymanager_default
     container_name: redis
-    ports:
-      - "6379:6379"
   
   visio:
     image: thewisepigeon/visio:latest
+    networks:
+        - proxymanager_default
     container_name: server
     depends_on:
       - postgres
       - redis
-    ports:
-      - "8080:8080"
+networks:
+  proxymanager_default:
+    external: true
