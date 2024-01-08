@@ -9,9 +9,6 @@ run-dev:
 install-deps:
 	@go mod download
 
-setup-db:
-	@docker run --name postgres -e POSTGRES_PASSWORD=pwd -p 5432:5432 -itd postgres:latest
-
 stop-db:
 	@docker stop postgres
 

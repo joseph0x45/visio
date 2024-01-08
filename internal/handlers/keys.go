@@ -27,7 +27,7 @@ func NewKeyHandler(keysStore *store.Keys, sessionsStore *store.Sessions, logger 
 	}
 }
 
-func generateKey(length int) string {
+func generateRandomString(length int) string {
 	const CHARACTER_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-_=+:;'/?><|"
 	key := ""
 	for i := 0; i < length; i++ {
@@ -46,38 +46,39 @@ func (h *KeyHandler) CreateKey(c *fiber.Ctx) error {
 	}
 	const KEY_LIMIT = 3
 	key_count, err := h.keys.CountByOwnerId(currentUser.Id)
-	fmt.Println("Key count", key_count)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	if key_count > KEY_LIMIT {
-		err := errors.New("Limit of keys exceeded")
-		h.logger.Error(err.Error())
 		return c.SendStatus(fiber.StatusForbidden)
 	}
-	prefix := ulid.Make().String()
-	key := generateKey(23)
-	hashedKey, err := pkg.Hash(key)
+	prefix := generateRandomString(7)
+	suffix := generateRandomString(23)
+	hashedKey, err := pkg.Hash(suffix)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	generatedKey := &types.Key{
+		Id:           ulid.Make().String(),
 		UserId:       currentUser.Id,
 		Prefix:       prefix,
 		KeyHash:      hashedKey,
-		CreationDate: time.Now().UTC(),
+		CreationDate: time.Now().UTC().Format("January, 2 2006"),
 	}
 	if err := h.keys.Insert(generatedKey); err != nil {
+		if errors.Is(err, types.ErrDuplicatePrefix) {
+			h.logger.Debug("Duplicate prefix error triggered")
+		}
 		h.logger.Error(err.Error())
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	finalKey := fmt.Sprintf("%s.%s", prefix, key)
+	key := fmt.Sprintf("%s.%s", prefix, suffix)
 	err = c.JSON(
 		map[string]interface{}{
 			"data": map[string]string{
-				"key": finalKey,
+				"key": key,
 			},
 		},
 	)

@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"log/slog"
 	"visio/internal/store"
 	"visio/internal/types"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type AppHandler struct {
@@ -43,6 +41,5 @@ func (h *AppHandler) GetKeysPage(c *fiber.Ctx) error {
 		h.logger.Error(err.Error())
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-  fmt.Printf("%#v", userKeys)
 	return c.Render("keys", fiber.Map{"Keys": userKeys}, "layouts/app")
 }
