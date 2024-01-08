@@ -2,24 +2,25 @@
   <title>Visio | Keys</title>
 </head>
 
-<main x-data="init()">
-  <!-- <div class="absolute"> -->
-  <!--   <h1>This is your key</h1> -->
-  <!-- </div> -->
-  <div class="w-full flex justify-between mt-5 items-baseline">
-    <h1 class="text-xl font-bold">Manage your API keys</h1>
-    <button x-bind:disabled="creating_key" @click="createKey" class="w-32 p-2 bg-black text-white rounded-md"
-      type="button">
-      <h1 x-show="!creating_key">New Key</h1>
-      <h1 x-show="creating_key">Creating...</h1>
-    </button>
+<main x-data="init( '{{ .Keys | jsonify }}' )">
+  <div class="w-full flex flex-col">
+    <div class="w-full flex justify-between my-5 items-baseline ">
+      <h1 class="text-sm lg:text-xl font-bold">Manage your API keys</h1>
+      <button x-bind:disabled="creating_key" @click="createKey" class="w-32 p-2 bg-black text-white rounded-md"
+        type="button">
+        <h1 x-show="!creating_key">New Key</h1>
+        <h1 x-show="creating_key">Creating...</h1>
+      </button>
+    </div>
   </div>
+
 </main>
 
 <script>
-  function init() {
+  function init(keysData) {
     return {
       creating_key: false,
+      keys: JSON.parse(keysData),
       createKey: async function () {
         creating_key = true
         try {

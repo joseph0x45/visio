@@ -38,3 +38,16 @@ func (k *Keys) CountByOwnerId(ownerId string) (int, error) {
 	}
 	return count, nil
 }
+
+func (k *Keys) GetByUserId(id string) ([]types.Key, error) {
+	data := []types.Key{}
+	err := k.db.Select(
+		&data,
+		`select * from keys where user_id=$1`,
+		id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("Error while retrieving keys from database: %w", err)
+	}
+	return data, nil
+}
