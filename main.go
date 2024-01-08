@@ -55,7 +55,6 @@ func main() {
 	client := app.Group("/")
 	client.Get("/", appHandler.GetLandingPage)
 	client.Get("/auth", appHandler.GetAuthPage)
-	client.Get("/home", authMiddleware.CookieAuth, appHandler.GetHomePage)
 	client.Get("/keys", authMiddleware.CookieAuth, appHandler.GetKeysPage)
 
 	server := app.Group("/api")
