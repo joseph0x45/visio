@@ -3,8 +3,9 @@ package store
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"visio/internal/types"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Users struct {
