@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 	"visio/internal/types"
-
 	"github.com/ory/dockertest/v3"
 	"github.com/redis/go-redis/v9"
 )
