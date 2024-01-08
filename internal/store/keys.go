@@ -2,8 +2,10 @@ package store
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"visio/internal/types"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type Keys struct {
@@ -19,12 +21,17 @@ func NewKeysStore(db *sqlx.DB) *Keys {
 func (k *Keys) Insert(key *types.Key) error {
 	_, err := k.db.NamedExec(
 		`
-      insert into keys(user_id, prefix, key_hash, creation_date)
-      values (:user_id, :prefix, :key_hash, :creation_date)
+      insert into keys(id, user_id, prefix, key_hash, creation_date)
+      values (:id, :user_id, :prefix, :key_hash, :creation_date)
     `,
 		key,
 	)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code.Name() == "unique_violation" {
+				return types.ErrDuplicatePrefix
+			}
+		}
 		return fmt.Errorf("Error while inserting new key: %w", err)
 	}
 	return nil
