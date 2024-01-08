@@ -10,6 +10,8 @@ services:
       POSTGRES_DB: visio
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pwd
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis
