@@ -88,7 +88,6 @@ func (h *AuthHandler) Signup(c *fiber.Ctx) error {
 			return c.SendStatus(fiber.ErrInternalServerError.Code)
 		}
 		if !pkg.PasswordMatches(reqPayload.Password, dbUser.Password) {
-			fmt.Print("bad pwd\n")
 			return c.SendStatus(fiber.ErrBadRequest.Code)
 		}
 		sessionId := ulid.Make().String()
