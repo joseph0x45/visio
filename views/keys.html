@@ -1,38 +1,45 @@
-<!-- This is a dummy file for testing key functionality -->
-
 <head>
-    <title>Key Auth</title>
+  <title>Visio | Keys</title>
 </head>
 
 <main x-data="init()">
-    <section class="p-12">
-        <button class="border bg-black text-white p-2 rounded-md w-32 text-center" @click="createKey"
-            type="button">Create
-            API key</button>
-        <button class="border p-2 rounded-md w-32 text-center">Revoke API key</button>
-    </section>
+  <!-- <div class="absolute"> -->
+  <!--   <h1>This is your key</h1> -->
+  <!-- </div> -->
+  <div class="w-full flex justify-between mt-5 items-baseline">
+    <h1 class="text-xl font-bold">Manage your API keys</h1>
+    <button x-bind:disabled="creating_key" @click="createKey" class="w-32 p-2 bg-black text-white rounded-md"
+      type="button">
+      <h1 x-show="!creating_key">New Key</h1>
+      <h1 x-show="creating_key">Creating...</h1>
+    </button>
+  </div>
 </main>
 
-
 <script>
-    function init() {
-        return {
-            createKey: async function () {
-                try {
-                    console.log("Creating key")
-                    const response = await fetch(
-                        `/api/key`,
-                        {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            }
-                        }
-                    )
-                } catch (err) {
-                    console.log(err)
-                }
+  function init() {
+    return {
+      creating_key: false,
+      createKey: async function () {
+        creating_key = true
+        try {
+          console.log("Creating key")
+          const response = await fetch(
+            `/api/key`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              }
             }
+          )
+          creating_key = false
+          console.log(response.status)
+        } catch (err) {
+          alert("Something went wrong. Please retry or contact us")
+          console.log(err)
         }
+      }
     }
+  }
 </script>

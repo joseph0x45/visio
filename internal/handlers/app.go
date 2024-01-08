@@ -21,6 +21,6 @@ func (h *AppHandler) GetHomePage(c *fiber.Ctx) error {
 	return c.Render("home", fiber.Map{})
 }
 
-func (h *AppHandler) GetKeyPage(c *fiber.Ctx) error {
-	return c.Render("keys", fiber.Map{})
+func (h *AppHandler) GetKeysPage(c *fiber.Ctx) error {
+	return c.Render("keys", fiber.Map{}, "layouts/app")
 }

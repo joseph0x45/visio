@@ -47,7 +47,7 @@ func main() {
 	client.Get("/", appHandler.GetLandingPage)
 	client.Get("/auth", appHandler.GetAuthPage)
 	client.Get("/home", authMiddleware.CookieAuth, appHandler.GetHomePage)
-	client.Get("/manage-keys", appHandler.GetKeyPage)
+	client.Get("/keys", appHandler.GetKeysPage)
 
 	server := app.Group("/api")
 	server.Post("/auth", authHandler.Signup)
