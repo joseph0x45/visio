@@ -28,7 +28,7 @@
               <h1 class="" x-text="key.creation_date"></h1>
             </div>
             <div class="">
-              <button>
+              <button @click="revokeKey(key.prefix)">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                   stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round"
@@ -67,6 +67,24 @@
         } catch (err) {
           alert("Something went wrong. Please retry or contact us")
           console.log(err)
+        }
+      },
+      revokeKey: async function (keyPrefix) {
+        try {
+          const response = await fetch(
+            `/api/key/${keyPrefix}`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json"
+              }
+            }
+          )
+          const { status } = response
+          console.log(status)
+        } catch (err) {
+          console.log(err)
+          alert("Something went wrong. Please retry or contact us")
         }
       }
     }

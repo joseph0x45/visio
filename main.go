@@ -59,7 +59,8 @@ func main() {
 
 	server := app.Group("/api")
 	server.Post("/auth", authHandler.Signup)
-	server.Post("/key", authMiddleware.CookieAuth, keyHandler.CreateKey)
+	server.Post("/key", authMiddleware.CookieAuth, keyHandler.Create)
+  server.Delete("/key/:prefix", authMiddleware.CookieAuth, keyHandler.Revoke)
 
 	port := os.Getenv("PORT")
 	if port == "" {
