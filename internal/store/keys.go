@@ -37,9 +37,9 @@ func (k *Keys) Insert(key *types.Key) error {
 	return nil
 }
 
-func (k *Keys) CountByOwnerId(ownerId string) (int, error) {
+func (k *Keys) CountByOwnerId(userId string) (int, error) {
 	count := 0
-	err := k.db.QueryRowx("select count(*) from keys where user_id=$1", ownerId).Scan(&count)
+	err := k.db.QueryRowx("select count(*) from keys where user_id=$1", userId).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("Error while counting keys by owner id: %w", err)
 	}
@@ -57,4 +57,12 @@ func (k *Keys) GetByUserId(id string) ([]types.Key, error) {
 		return nil, fmt.Errorf("Error while retrieving keys from database: %w", err)
 	}
 	return data, nil
+}
+
+func (k *Keys) Delete(prefix, userId string) error {
+	_, err := k.db.Exec("delete from keys where prefix=$1 and user_id=$2", prefix, userId)
+	if err != nil {
+		return fmt.Errorf("Error while deleting key: %w", err)
+	}
+	return nil
 }

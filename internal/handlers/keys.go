@@ -37,7 +37,7 @@ func generateRandomString(length int) string {
 	return key
 }
 
-func (h *KeyHandler) CreateKey(c *fiber.Ctx) error {
+func (h *KeyHandler) Create(c *fiber.Ctx) error {
 	currentUser, ok := c.Locals("currentUser").(*types.User)
 	if !ok {
 		err := errors.New("Error during currentUser type conversion")
@@ -86,4 +86,21 @@ func (h *KeyHandler) CreateKey(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	return c.SendStatus(fiber.StatusCreated)
+}
+
+func (h *KeyHandler) Revoke(c *fiber.Ctx) error {
+	currentUser, ok := c.Locals("currentUser").(*types.User)
+	if !ok {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+	keyPrefix := c.Params("prefix")
+	if keyPrefix == "" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+	err := h.keys.Delete(keyPrefix, currentUser.Id)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+	return c.SendStatus(fiber.StatusOK)
 }

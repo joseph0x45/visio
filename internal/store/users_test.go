@@ -3,17 +3,16 @@ package store
 import (
 	"errors"
 	"fmt"
-	"log"
-	"os"
-	"testing"
-	"time"
-	"visio/internal/types"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/require"
+	"log"
+	"os"
+	"testing"
+	"time"
+	"visio/internal/types"
 )
 
 const (
