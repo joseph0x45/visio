@@ -41,7 +41,6 @@
       </template>
     </ul>
   </div>
-
 </main>
 
 <script>
@@ -63,7 +62,14 @@
             }
           )
           creating_key = false
-          console.log(response.status)
+          const {status} = response
+          switch (status) {
+            case 201:
+              window.location.reload()
+            default:
+              console.log(status)
+              alert("Something went wrong. Please retry or contact us")
+          }
         } catch (err) {
           alert("Something went wrong. Please retry or contact us")
           console.log(err)
@@ -80,8 +86,14 @@
               }
             }
           )
-          const { status } = response
-          console.log(status)
+          const {status} = response
+          switch (status) {
+            case 200:
+              window.location.reload()
+            default:
+              console.log(status)
+              alert("Something went wrong. Please retry or contact us")
+          }
         } catch (err) {
           console.log(err)
           alert("Something went wrong. Please retry or contact us")
