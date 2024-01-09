@@ -153,6 +153,8 @@ func TestUsers_GetById(t *testing.T) {
 		user, err := s.GetById("1")
 		require.Nil(t, user)
 		require.Equal(t, err, types.ErrUserNotFound)
+
+		testDB.Exec("TRUNCATE users;")
 	})
 
 	t.Run("user exists", func(t *testing.T) {
@@ -171,5 +173,7 @@ func TestUsers_GetById(t *testing.T) {
 		require.Equal(t, user.Password, existingUser.Password)
 		require.Equal(t, user.SignupDate.In(time.UTC), existingUser.SignupDate)
 		require.NoError(t, err)
+
+		testDB.Exec("TRUNCATE users;")
 	})
 }
