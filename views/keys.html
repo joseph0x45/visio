@@ -14,15 +14,15 @@
     </div>
     <ul>
       <div class="grid grid-cols-3 w-full border-b-2">
-        <h1>Prefix</h1>
-        <h1 class="">Created at</h1>
+        <h1>Key</h1>
+        <h1 class="">Created</h1>
         <h1 class="">Actions</h1>
       </div>
       <template x-for="key in keys" :key="key.prefix">
         <li>
           <div class="grid grid-cols-3 py-2 w-full">
             <div class="">
-              <h1 x-text="key.prefix"></h1>
+              <h1 x-text="key.prefix + '******************'"></h1>
             </div>
             <div class="">
               <h1 class="" x-text="key.creation_date"></h1>
