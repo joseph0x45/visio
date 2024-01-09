@@ -145,3 +145,35 @@ func TestUsers_Insert(t *testing.T) {
 		testDB.Exec("TRUNCATE users;")
 	})
 }
+
+func TestUsers_GetById(t *testing.T) {
+	s := NewUsersStore(testDB)
+
+	t.Run("user not found", func(t *testing.T) {
+		user, err := s.GetById("1")
+		require.Nil(t, user)
+		require.Equal(t, err, types.ErrUserNotFound)
+
+		testDB.Exec("TRUNCATE users;")
+	})
+
+	t.Run("user exists", func(t *testing.T) {
+		existingUser := types.User{
+			Id:         "1",
+			Email:      "emailz",
+			Password:   "passwordz",
+			SignupDate: time.Now().Truncate(time.Hour).UTC(),
+		}
+
+		require.NoError(t, s.Insert(&existingUser))
+
+		user, err := s.GetById("1")
+		require.Equal(t, user.Id, existingUser.Id)
+		require.Equal(t, user.Email, existingUser.Email)
+		require.Equal(t, user.Password, existingUser.Password)
+		require.Equal(t, user.SignupDate.In(time.UTC), existingUser.SignupDate)
+		require.NoError(t, err)
+
+		testDB.Exec("TRUNCATE users;")
+	})
+}
