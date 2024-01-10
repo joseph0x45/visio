@@ -24,10 +24,17 @@ func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, types.ErrFileNotFound) {
 			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(types.ErrFileNotFoundMessage))
 			return
 		}
 		if errors.Is(err, types.ErrUnsupportedFormat) {
 			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(types.ErrUnsupportedFormatMessage))
+			return
+		}
+		if errors.Is(err, types.ErrBodyTooLarge) {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(types.ErrBodyTooLargeMessage))
 			return
 		}
 		h.logger.Error(err.Error())
@@ -36,5 +43,6 @@ func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(filePath)
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Ok"))
 	return
 }
