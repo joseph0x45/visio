@@ -1,4 +1,5 @@
 {{define "main"}}
+
 <head>
   <title>Visio | Keys</title>
 </head>
@@ -67,8 +68,14 @@
           switch (status) {
             case 201:
               window.location.reload()
-            default:
-              console.log(status)
+              break
+            case 401:
+              window.location.href = "/auth"
+              break
+            case 403:
+              alert("You can not create more than 5 keys")
+              break
+            case 500:
               alert("Something went wrong. Please retry or contact us")
           }
         } catch (err) {
@@ -91,8 +98,11 @@
           switch (status) {
             case 200:
               window.location.reload()
-            default:
-              console.log(status)
+              break
+            case 401:
+              window.location.href = "/auth"
+              break
+            case 500:
               alert("Something went wrong. Please retry or contact us")
           }
         } catch (err) {

@@ -12,6 +12,7 @@ import (
 	"visio/internal/types"
 	"visio/pkg"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -103,5 +104,22 @@ func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *KeyHandler) Revoke(w http.ResponseWriter, r *http.Request) {
-
+	currentUser, ok := r.Context().Value("currentUser").(*types.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	prefix := chi.URLParam(r, "prefix")
+	if prefix == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err := h.keys.Delete(prefix, currentUser.Id)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	return
 }
