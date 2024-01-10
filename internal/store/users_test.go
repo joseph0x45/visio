@@ -89,8 +89,8 @@ func migrateTestDB(db *sqlx.DB) error {
 create table if not exists users (
 	id text not null primary key,
 	email text not null unique,
-	password text not null,
-	signup_date timestamp not null
+	password_hash text not null,
+	signup_date text not null
 );`
 	_, err := db.Exec(q)
 	return err
@@ -101,18 +101,18 @@ func TestUsers_Insert(t *testing.T) {
 
 	t.Run("duplicate email", func(t *testing.T) {
 		err := s.Insert(&types.User{
-			Id:         "1",
-			Email:      "foo@gmail.com",
-			Password:   "password1",
-			SignupDate: time.Now(),
+			Id:           "1",
+			Email:        "foo@gmail.com",
+			PasswordHash: "password1",
+			SignupDate:   time.Now().UTC().Format("January, 2 2006"),
 		})
 		require.NoError(t, err)
 
 		err = s.Insert(&types.User{
-			Id:         "2",
-			Email:      "foo@gmail.com",
-			Password:   "password2",
-			SignupDate: time.Now(),
+			Id:           "2",
+			Email:        "foo@gmail.com",
+			PasswordHash: "password2",
+			SignupDate:   time.Now().UTC().Format("January, 2 2006"),
 		})
 		require.Error(t, err)
 		var pqErr *pq.Error
@@ -126,18 +126,18 @@ func TestUsers_Insert(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		err := s.Insert(&types.User{
-			Id:         "1",
-			Email:      "foo@gmail.com",
-			Password:   "password1",
-			SignupDate: time.Now(),
+			Id:           "1",
+			Email:        "foo@gmail.com",
+			PasswordHash: "password1",
+			SignupDate:   time.Now().UTC().Format("January, 2 2006"),
 		})
 		require.NoError(t, err)
 
 		err = s.Insert(&types.User{
-			Id:         "2",
-			Email:      "bar@gmail.com",
-			Password:   "password2",
-			SignupDate: time.Now(),
+			Id:           "2",
+			Email:        "bar@gmail.com",
+			PasswordHash: "password2",
+			SignupDate:   time.Now().UTC().Format("January, 2 2006"),
 		})
 		require.NoError(t, err)
 
@@ -158,10 +158,10 @@ func TestUsers_GetById(t *testing.T) {
 
 	t.Run("user exists", func(t *testing.T) {
 		existingUser := types.User{
-			Id:         "1",
-			Email:      "emailz",
-			Password:   "passwordz",
-			SignupDate: time.Now().Truncate(time.Hour).UTC(),
+			Id:           "1",
+			Email:        "emailz",
+			PasswordHash: "passwordz",
+			SignupDate:   time.Now().Truncate(time.Hour).UTC().Format("January, 2 2006"),
 		}
 
 		require.NoError(t, s.Insert(&existingUser))
@@ -169,8 +169,8 @@ func TestUsers_GetById(t *testing.T) {
 		user, err := s.GetById("1")
 		require.Equal(t, user.Id, existingUser.Id)
 		require.Equal(t, user.Email, existingUser.Email)
-		require.Equal(t, user.Password, existingUser.Password)
-		require.Equal(t, user.SignupDate.In(time.UTC), existingUser.SignupDate)
+		require.Equal(t, user.PasswordHash, existingUser.PasswordHash)
+		require.Equal(t, user.SignupDate, existingUser.SignupDate)
 		require.NoError(t, err)
 
 		testDB.Exec("TRUNCATE users;")
