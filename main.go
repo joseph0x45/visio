@@ -38,6 +38,7 @@ func main() {
 	appHandler := handlers.NewAppHandler(keys, appLogger)
 	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
 	keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
+	faceHandler := handlers.NewFaceHandler(appLogger)
 	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
 
 	r := chi.NewRouter()
@@ -66,6 +67,10 @@ func main() {
 		r.With(authMiddleware.CookieAuth).Get("/", appHandler.GetKeysPage)
 		r.With(authMiddleware.CookieAuth).Post("/", keyHandler.Create)
 		r.With(authMiddleware.CookieAuth).Delete("/{prefix}", keyHandler.Revoke)
+	})
+
+	r.Route("/faces", func(r chi.Router) {
+		r.Post("/", faceHandler.SaveFace)
 	})
 
 	port := os.Getenv("PORT")
