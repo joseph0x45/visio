@@ -26,6 +26,7 @@ func PNGToJPEG(filePath string) (string, error) {
 		return "", fmt.Errorf("Error while creating temp file: %w", err)
 	}
 	err = os.WriteFile(f.Name(), buffer.Bytes(), os.ModePerm)
+	_, err = f.Write(buffer.Bytes())
 	if err != nil {
 		return "", fmt.Errorf("Error while writing bytes %w", err)
 	}
