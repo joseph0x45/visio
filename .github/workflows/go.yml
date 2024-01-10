@@ -23,6 +23,9 @@ jobs:
       with:
         node-version: 18
 
+    - name: Install dependencies
+      run: npm ci
+
     - name: Compile css
       run: make build-css
 
