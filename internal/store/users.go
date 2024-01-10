@@ -21,8 +21,8 @@ func NewUsersStore(db *sqlx.DB) *Users {
 func (s *Users) Insert(user *types.User) error {
 	_, err := s.db.NamedExec(
 		`
-      insert into users(id, email, password, signup_date)
-      values (:id, :email, :password, :signup_date)
+      insert into users(id, email, password_hash, signup_date)
+      values (:id, :email, :password_hash, :signup_date)
     `,
 		user,
 	)

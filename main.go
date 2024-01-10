@@ -3,15 +3,14 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
 	"os"
 	"visio/internal/database"
 	"visio/internal/handlers"
 	"visio/internal/store"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
 )
 
 //go:embed views/*
@@ -29,14 +28,14 @@ func main() {
 		}
 	}
 	postgresPool := database.NewPostgresPool()
-	// redisClient := database.GetRedisClient()
-	// users := store.NewUsersStore(postgresPool)
-	// sessions := store.NewSessionsStore(redisClient)
+	redisClient := database.GetRedisClient()
+	users := store.NewUsersStore(postgresPool)
+	sessions := store.NewSessionsStore(redisClient)
 	keys := store.NewKeysStore(postgresPool)
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	appLogger := slog.New(textHandler)
 	appHandler := handlers.NewAppHandler(keys, appLogger)
-	// authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
+	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
 	// keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
 	// authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
 
@@ -57,6 +56,10 @@ func main() {
 
 	r.Get("/", appHandler.RenderLandingPage)
 	r.Get("/auth", appHandler.RenderAuthPage)
+
+	r.Route("/api", func(r chi.Router) {
+		r.Post("/auth", authHandler.Authicate)
+	})
 
 	// engine := html.New("./views", ".html")
 	// engine.Reload(appEnv != "PROD")

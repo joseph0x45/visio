@@ -1,8 +1,8 @@
 create table if not exists users (
   id text not null primary key,
   email text not null unique,
-  password text not null,
-  signup_date timestamp not null
+  password_hash text not null,
+  signup_date text not null
 );
 
 create table if not exists keys (
