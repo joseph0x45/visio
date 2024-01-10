@@ -1,16 +1,10 @@
 package handlers
 
 import (
-	"errors"
-	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"math/rand"
-	"time"
+	"net/http"
 	"visio/internal/store"
-	"visio/internal/types"
-	"visio/pkg"
 )
 
 type KeyHandler struct {
@@ -37,70 +31,6 @@ func generateRandomString(length int) string {
 	return key
 }
 
-func (h *KeyHandler) Create(c *fiber.Ctx) error {
-	currentUser, ok := c.Locals("currentUser").(*types.User)
-	if !ok {
-		err := errors.New("Error during currentUser type conversion")
-		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-	const KEY_LIMIT = 3
-	key_count, err := h.keys.CountByOwnerId(currentUser.Id)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
-	if key_count > KEY_LIMIT {
-		return c.SendStatus(fiber.StatusForbidden)
-	}
-	prefix := generateRandomString(7)
-	suffix := generateRandomString(23)
-	hashedKey, err := pkg.Hash(suffix)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
-	generatedKey := &types.Key{
-		Id:           ulid.Make().String(),
-		UserId:       currentUser.Id,
-		Prefix:       prefix,
-		KeyHash:      hashedKey,
-		CreationDate: time.Now().UTC().Format("January, 2 2006"),
-	}
-	if err := h.keys.Insert(generatedKey); err != nil {
-		if errors.Is(err, types.ErrDuplicatePrefix) {
-			h.logger.Debug("Duplicate prefix error triggered")
-		}
-		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
-	key := fmt.Sprintf("%s.%s", prefix, suffix)
-	err = c.JSON(
-		map[string]interface{}{
-			"data": map[string]string{
-				"key": key,
-			},
-		},
-	)
-	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
-	return c.SendStatus(fiber.StatusCreated)
-}
+func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 
-func (h *KeyHandler) Revoke(c *fiber.Ctx) error {
-	currentUser, ok := c.Locals("currentUser").(*types.User)
-	if !ok {
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-	keyPrefix := c.Params("prefix")
-	if keyPrefix == "" {
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-	err := h.keys.Delete(keyPrefix, currentUser.Id)
-	if err != nil {
-		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
-	return c.SendStatus(fiber.StatusOK)
 }

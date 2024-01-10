@@ -61,32 +61,6 @@ func main() {
 		r.Post("/auth", authHandler.Authicate)
 	})
 
-	// engine := html.New("./views", ".html")
-	// engine.Reload(appEnv != "PROD")
-	// engine.AddFunc("jsonify", func(s interface{}) string {
-	// 	jsonBytes, err := json.Marshal(s)
-	// 	if err != nil {
-	// 		return ""
-	// 	}
-	// 	return string(jsonBytes)
-	// })
-	// app := fiber.New(fiber.Config{
-	// 	Views:       engine,
-	// 	ViewsLayout: "layouts/main",
-	// })
-	// app.Static("/public", "./public")
-	// app.Use(recover.New())
-	//
-	// client := app.Group("/")
-	// client.Get("/", appHandler.GetLandingPage)
-	// client.Get("/auth", appHandler.GetAuthPage)
-	// client.Get("/keys", authMiddleware.CookieAuth, appHandler.GetKeysPage)
-	//
-	// server := app.Group("/api")
-	// server.Post("/auth", authHandler.Signup)
-	// server.Post("/key", authMiddleware.CookieAuth, keyHandler.Create)
-	// server.Delete("/key/:prefix", authMiddleware.CookieAuth, keyHandler.Revoke)
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		panic("Unable to read PORT environment variable")
