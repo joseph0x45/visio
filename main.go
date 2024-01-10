@@ -56,6 +56,7 @@ func main() {
 	})
 
 	r.Get("/", appHandler.RenderLandingPage)
+	r.Get("/auth", appHandler.RenderAuthPage)
 
 	// engine := html.New("./views", ".html")
 	// engine.Reload(appEnv != "PROD")
@@ -87,7 +88,7 @@ func main() {
 	if port == "" {
 		panic("Unable to read PORT environment variable")
 	}
-	// err := app.Listen(fmt.Sprintf(":%s", port))
+	fmt.Printf("Server listening on port %s\n", port)
 	err := http.ListenAndServe(":8080", r)
 	if err != nil {
 		panic(err)

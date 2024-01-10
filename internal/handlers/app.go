@@ -41,16 +41,23 @@ func (h *AppHandler) RenderLandingPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *AppHandler) GetLandingPage(c *fiber.Ctx) error {
-	return c.Render("index", fiber.Map{})
-}
-
-func (h *AppHandler) GetAuthPage(c *fiber.Ctx) error {
-	return c.Render("auth", fiber.Map{})
-}
-
-func (h *AppHandler) GetHomePage(c *fiber.Ctx) error {
-	return c.Render("home", fiber.Map{})
+func (h *AppHandler) RenderAuthPage(w http.ResponseWriter, r *http.Request) {
+	templateFiles := []string{
+		"views/layouts/base.html",
+		"views/auth.html",
+	}
+	ts, err := template.ParseFiles(templateFiles...)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+    return
+	}
+  err = ts.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *AppHandler) GetKeysPage(c *fiber.Ctx) error {
