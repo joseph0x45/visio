@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func ToJPEG(filePath string) (string, error) {
+func PNGToJPEG(filePath string) (string, error) {
 	imgBytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", fmt.Errorf("Error while reading file: %w", err)
