@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"visio/internal/types"
 	"visio/pkg"
 )
@@ -20,7 +21,7 @@ func NewFaceHandler(logger *slog.Logger) *FaceHandler {
 }
 
 func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
-	filePath, err := pkg.HandleFileUpload(w, r)
+	filePath, err, isJPEG := pkg.HandleFileUpload(w, r)
 	if err != nil {
 		if errors.Is(err, types.ErrFileNotFound) {
 			w.WriteHeader(http.StatusBadRequest)
@@ -42,7 +43,29 @@ func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(filePath)
+	fmt.Println(isJPEG)
+	if !isJPEG {
+		jpegFilePath, err := pkg.PNGToJPEG(filePath)
+		if err != nil {
+			h.logger.Error(err.Error())
+			err = os.Remove(filePath)
+			if err != nil {
+				h.logger.Error(fmt.Sprintf("Failed to delete file: %s", err.Error()))
+			}
+			err = os.Remove(jpegFilePath)
+			if err != nil {
+				h.logger.Error(fmt.Sprintf("Failed to delete file: %s", err.Error()))
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		err = os.Remove(filePath)
+		if err != nil {
+			h.logger.Error(fmt.Sprintf("Failed to delete file: %s", err.Error()))
+		}
+    filePath = jpegFilePath
+	}
+  fmt.Println(filePath)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Ok"))
 	return
 }
