@@ -1,10 +1,13 @@
 package handlers
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"html/template"
 	"log/slog"
+	"net/http"
 	"visio/internal/store"
 	"visio/internal/types"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type AppHandler struct {
@@ -16,6 +19,25 @@ func NewAppHandler(keys *store.Keys, logger *slog.Logger) *AppHandler {
 	return &AppHandler{
 		keys:   keys,
 		logger: logger,
+	}
+}
+
+func (h *AppHandler) RenderLandingPage(w http.ResponseWriter, r *http.Request) {
+	templFiles := []string{
+		"views/layouts/base.html",
+		"views/home.html",
+	}
+	ts, err := template.ParseFiles(templFiles...)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = ts.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }
 

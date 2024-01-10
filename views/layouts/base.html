@@ -1,15 +1,17 @@
+{{define "base"}}
 <!DOCTYPE html>
 <html>
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="" href="/public/output.css">
+  <link rel="stylesheet" type="text/css" href="/public/output.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 </head>
 
 <body class="w-full h-screen ">
-  {{embed}}
+  {{template "main" .}}
 </body>
 
 </html>
+{{end}}
