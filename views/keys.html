@@ -1,8 +1,9 @@
+{{define "main"}}
 <head>
   <title>Visio | Keys</title>
 </head>
 
-<main x-data="init( '{{ .Keys | jsonify }}' )">
+<main x-data="init()">
   <div class="w-full flex flex-col">
     <div class="w-full flex justify-between my-5 items-baseline ">
       <h1 class="text-sm lg:text-xl font-bold">Manage your API keys</h1>
@@ -102,3 +103,4 @@
     }
   }
 </script>
+{{end}}

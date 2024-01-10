@@ -63,6 +63,7 @@ func main() {
 	})
 
 	r.Route("/keys", func(r chi.Router) {
+		r.With(authMiddleware.CookieAuth).Get("/", appHandler.GetKeysPage)
 		r.With(authMiddleware.CookieAuth).Post("/", keyHandler.Create)
 		r.With(authMiddleware.CookieAuth).Post("/{prefix}", keyHandler.Revoke)
 	})

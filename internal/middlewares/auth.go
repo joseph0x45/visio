@@ -3,6 +3,7 @@ package middlewares
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"visio/internal/store"
@@ -28,14 +29,16 @@ func (m *AuthMiddleware) CookieAuth(next http.Handler) http.Handler {
 		sessionCookie, err := r.Cookie("session")
 		if err != nil {
 			if err == http.ErrNoCookie {
-				w.WriteHeader(http.StatusUnauthorized)
+        fmt.Println("No cookie? ;(")
+				http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
 				return
 			}
 		}
-		sessionValue, err := m.sessions.Get(sessionCookie.Name)
+		sessionValue, err := m.sessions.Get(sessionCookie.Value)
 		if err != nil {
 			if errors.Is(err, types.ErrSessionNotFound) {
-				w.WriteHeader(http.StatusUnauthorized)
+        fmt.Println("No session 0_0")
+				http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
 				return
 			}
 			m.logger.Error(err.Error())
@@ -45,7 +48,8 @@ func (m *AuthMiddleware) CookieAuth(next http.Handler) http.Handler {
 		sessionUser, err := m.users.GetById(sessionValue)
 		if err != nil {
 			if errors.Is(err, types.ErrUserNotFound) {
-				w.WriteHeader(http.StatusUnauthorized)
+        fmt.Println("No user o_o")
+				http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
 				return
 			}
 			m.logger.Error(err.Error())

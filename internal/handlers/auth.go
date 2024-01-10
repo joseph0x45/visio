@@ -3,13 +3,13 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"net/http"
 	"time"
 	"visio/internal/store"
 	"visio/internal/types"
 	"visio/pkg"
-	"github.com/oklog/ulid/v2"
 )
 
 type AuthHandler struct {
@@ -26,7 +26,7 @@ func NewAuthHandler(usersStore *store.Users, sessionsStore *store.Sessions, logg
 	}
 }
 
-func (h *AuthHandler) Authicate(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 	payload := new(struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -82,6 +82,7 @@ func (h *AuthHandler) Authicate(w http.ResponseWriter, r *http.Request) {
 		authCookie := &http.Cookie{
 			Name:  "session",
 			Value: sessionId,
+			Path:  "/",
 		}
 		http.SetCookie(w, authCookie)
 		w.WriteHeader(http.StatusCreated)
@@ -111,6 +112,7 @@ func (h *AuthHandler) Authicate(w http.ResponseWriter, r *http.Request) {
 		authCookie := &http.Cookie{
 			Name:  "session",
 			Value: sessionId,
+			Path:  "/",
 		}
 		http.SetCookie(w, authCookie)
 		w.WriteHeader(http.StatusOK)

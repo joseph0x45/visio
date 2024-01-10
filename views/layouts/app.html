@@ -1,3 +1,4 @@
+{{define "app"}}
 <!DOCTYPE html>
 <html>
 
@@ -21,8 +22,9 @@
         </a>
       </div>
     </nav>
-    {{embed}}
+    {{template "main" .}}
   </main>
 </body>
 
 </html>
+{{end}}

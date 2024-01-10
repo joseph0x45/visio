@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"visio/internal/store"
 	"visio/internal/types"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type AppHandler struct {
@@ -50,9 +48,9 @@ func (h *AppHandler) RenderAuthPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-    return
+		return
 	}
-  err = ts.ExecuteTemplate(w, "base", nil)
+	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -60,15 +58,35 @@ func (h *AppHandler) RenderAuthPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *AppHandler) GetKeysPage(c *fiber.Ctx) error {
-	currentUser, ok := c.Locals("currentUser").(*types.User)
+func (h *AppHandler) GetKeysPage(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(*types.User)
 	if !ok {
-		return c.SendStatus(fiber.StatusUnauthorized)
+		http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
+		return
 	}
 	userKeys, err := h.keys.GetByUserId(currentUser.Id)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	return c.Render("keys", fiber.Map{"Keys": userKeys}, "layouts/app")
+	templateFiles := []string{
+		"views/layouts/app.html",
+		"views/keys.html",
+	}
+	ts, err := template.ParseFiles(templateFiles...)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	templData := map[string]interface{}{
+		"Keys": userKeys,
+	}
+	err = ts.ExecuteTemplate(w, "app", templData)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
