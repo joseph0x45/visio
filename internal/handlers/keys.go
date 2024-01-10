@@ -1,10 +1,22 @@
 package handlers
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"log/slog"
 	"math/rand"
 	"net/http"
+	"time"
 	"visio/internal/store"
+	"visio/internal/types"
+	"visio/pkg"
+
+	"github.com/oklog/ulid/v2"
+)
+
+const (
+	KeyLimit = 5
 )
 
 type KeyHandler struct {
@@ -32,5 +44,64 @@ func generateRandomString(length int) string {
 }
 
 func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(*types.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	keysCount, err := h.keys.CountByOwnerId(currentUser.Id)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if keysCount == KeyLimit {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	prefix := generateRandomString(7)
+	suffix := generateRandomString(23)
+	key := fmt.Sprintf("%s.%s", prefix, suffix)
+	keyHash, err := pkg.Hash(suffix)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	newKey := &types.Key{
+		Id:           ulid.Make().String(),
+		UserId:       currentUser.Id,
+		Prefix:       prefix,
+		KeyHash:      keyHash,
+		CreationDate: time.Now().UTC().Format("January, 2 2006"),
+	}
+	err = h.keys.Insert(newKey)
+	if err != nil {
+		if errors.Is(err, types.ErrDuplicatePrefix) {
+			h.logger.Debug("A duplicate prefix error occured")
+		}
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	data, err := json.Marshal(
+		map[string]interface{}{
+			"data": map[string]string{
+				"key": key,
+			},
+		},
+	)
+	if err != nil {
+		//Delete created key and add header to tell client
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	w.Write(data)
+	return
+}
+
+func (h *KeyHandler) Revoke(w http.ResponseWriter, r *http.Request) {
 
 }

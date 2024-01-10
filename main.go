@@ -10,6 +10,7 @@ import (
 	"os"
 	"visio/internal/database"
 	"visio/internal/handlers"
+	"visio/internal/middlewares"
 	"visio/internal/store"
 )
 
@@ -36,8 +37,8 @@ func main() {
 	appLogger := slog.New(textHandler)
 	appHandler := handlers.NewAppHandler(keys, appLogger)
 	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
-	// keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
-	// authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
+	keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
+	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
 
 	r := chi.NewRouter()
 
@@ -59,6 +60,11 @@ func main() {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/auth", authHandler.Authicate)
+	})
+
+	r.Route("/keys", func(r chi.Router) {
+		r.With(authMiddleware.CookieAuth).Post("/", keyHandler.Create)
+		r.With(authMiddleware.CookieAuth).Post("/{prefix}", keyHandler.Revoke)
 	})
 
 	port := os.Getenv("PORT")
