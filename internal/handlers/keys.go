@@ -1,16 +1,23 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"math/rand"
+	"net/http"
 	"time"
 	"visio/internal/store"
 	"visio/internal/types"
 	"visio/pkg"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/oklog/ulid/v2"
+)
+
+const (
+	KeyLimit = 5
 )
 
 type KeyHandler struct {
@@ -37,45 +44,48 @@ func generateRandomString(length int) string {
 	return key
 }
 
-func (h *KeyHandler) Create(c *fiber.Ctx) error {
-	currentUser, ok := c.Locals("currentUser").(*types.User)
+func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(*types.User)
 	if !ok {
-		err := errors.New("Error during currentUser type conversion")
-		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
-	const KEY_LIMIT = 3
-	key_count, err := h.keys.CountByOwnerId(currentUser.Id)
+	keysCount, err := h.keys.CountByOwnerId(currentUser.Id)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	if key_count > KEY_LIMIT {
-		return c.SendStatus(fiber.StatusForbidden)
+	if keysCount == KeyLimit {
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 	prefix := generateRandomString(7)
 	suffix := generateRandomString(23)
-	hashedKey, err := pkg.Hash(suffix)
+	key := fmt.Sprintf("%s.%s", prefix, suffix)
+	keyHash, err := pkg.Hash(suffix)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	generatedKey := &types.Key{
+	newKey := &types.Key{
 		Id:           ulid.Make().String(),
 		UserId:       currentUser.Id,
 		Prefix:       prefix,
-		KeyHash:      hashedKey,
+		KeyHash:      keyHash,
 		CreationDate: time.Now().UTC().Format("January, 2 2006"),
 	}
-	if err := h.keys.Insert(generatedKey); err != nil {
+	err = h.keys.Insert(newKey)
+	if err != nil {
 		if errors.Is(err, types.ErrDuplicatePrefix) {
-			h.logger.Debug("Duplicate prefix error triggered")
+			h.logger.Debug("A duplicate prefix error occured")
 		}
 		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	key := fmt.Sprintf("%s.%s", prefix, suffix)
-	err = c.JSON(
+	data, err := json.Marshal(
 		map[string]interface{}{
 			"data": map[string]string{
 				"key": key,
@@ -83,24 +93,33 @@ func (h *KeyHandler) Create(c *fiber.Ctx) error {
 		},
 	)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		//Delete created key and add header to tell client
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	return c.SendStatus(fiber.StatusCreated)
+	w.WriteHeader(http.StatusCreated)
+	w.Write(data)
+	return
 }
 
-func (h *KeyHandler) Revoke(c *fiber.Ctx) error {
-	currentUser, ok := c.Locals("currentUser").(*types.User)
+func (h *KeyHandler) Revoke(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(*types.User)
 	if !ok {
-		return c.SendStatus(fiber.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
-	keyPrefix := c.Params("prefix")
-	if keyPrefix == "" {
-		return c.SendStatus(fiber.StatusBadRequest)
+	prefix := chi.URLParam(r, "prefix")
+	if prefix == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
-	err := h.keys.Delete(keyPrefix, currentUser.Id)
+	err := h.keys.Delete(prefix, currentUser.Id)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	return c.SendStatus(fiber.StatusOK)
+	w.WriteHeader(http.StatusOK)
+	return
 }

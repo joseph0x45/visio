@@ -1,8 +1,10 @@
 package handlers
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"encoding/json"
+	"html/template"
 	"log/slog"
+	"net/http"
 	"visio/internal/store"
 	"visio/internal/types"
 )
@@ -19,27 +21,82 @@ func NewAppHandler(keys *store.Keys, logger *slog.Logger) *AppHandler {
 	}
 }
 
-func (h *AppHandler) GetLandingPage(c *fiber.Ctx) error {
-	return c.Render("index", fiber.Map{})
+func (h *AppHandler) RenderLandingPage(w http.ResponseWriter, r *http.Request) {
+	templFiles := []string{
+		"views/layouts/base.html",
+		"views/home.html",
+	}
+	ts, err := template.ParseFiles(templFiles...)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = ts.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
-func (h *AppHandler) GetAuthPage(c *fiber.Ctx) error {
-	return c.Render("auth", fiber.Map{})
+func (h *AppHandler) RenderAuthPage(w http.ResponseWriter, r *http.Request) {
+	templateFiles := []string{
+		"views/layouts/base.html",
+		"views/auth.html",
+	}
+	ts, err := template.ParseFiles(templateFiles...)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = ts.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
-func (h *AppHandler) GetHomePage(c *fiber.Ctx) error {
-	return c.Render("home", fiber.Map{})
-}
-
-func (h *AppHandler) GetKeysPage(c *fiber.Ctx) error {
-	currentUser, ok := c.Locals("currentUser").(*types.User)
+func (h *AppHandler) GetKeysPage(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(*types.User)
 	if !ok {
-		return c.SendStatus(fiber.StatusUnauthorized)
+		http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
+		return
 	}
 	userKeys, err := h.keys.GetByUserId(currentUser.Id)
 	if err != nil {
 		h.logger.Error(err.Error())
-		return c.SendStatus(fiber.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	return c.Render("keys", fiber.Map{"Keys": userKeys}, "layouts/app")
+	templateFiles := []string{
+		"views/layouts/app.html",
+		"views/keys.html",
+	}
+
+	ts, err := template.New("").Funcs(template.FuncMap{
+		"jsonify": func(v interface{}) string {
+			b, err := json.Marshal(v)
+			if err != nil {
+				return ""
+			}
+			return string(b)
+		},
+	}).ParseFiles(templateFiles...)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	templData := map[string]interface{}{
+		"Keys": userKeys,
+	}
+	err = ts.ExecuteTemplate(w, "app", templData)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
