@@ -51,7 +51,6 @@ func main() {
 			return
 		}
 		w.Header().Set("Content-Type", "text/css")
-    fmt.Printf("%s", string(css))
 		w.Write(css)
 		return
 	})
