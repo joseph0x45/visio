@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -33,7 +32,6 @@ func (h *AuthHandler) Authicate(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	})
 	action := r.URL.Query().Get("action")
-  fmt.Println(action)
 	if action != "Login" && action != "Register" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
