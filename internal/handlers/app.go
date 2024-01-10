@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -74,7 +75,16 @@ func (h *AppHandler) GetKeysPage(w http.ResponseWriter, r *http.Request) {
 		"views/layouts/app.html",
 		"views/keys.html",
 	}
-	ts, err := template.ParseFiles(templateFiles...)
+
+	ts, err := template.New("").Funcs(template.FuncMap{
+		"jsonify": func(v interface{}) string {
+			b, err := json.Marshal(v)
+			if err != nil {
+				return ""
+			}
+			return string(b)
+		},
+	}).ParseFiles(templateFiles...)
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

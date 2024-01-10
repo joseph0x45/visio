@@ -3,7 +3,7 @@
   <title>Visio | Keys</title>
 </head>
 
-<main x-data="init()">
+<main x-data="init( '{{ .Keys | jsonify }}' )">
   <div class="w-full flex flex-col">
     <div class="w-full flex justify-between my-5 items-baseline ">
       <h1 class="text-sm lg:text-xl font-bold">Manage your API keys</h1>
@@ -54,7 +54,7 @@
         try {
           console.log("Creating key")
           const response = await fetch(
-            `/api/key`,
+            `/keys`,
             {
               method: "POST",
               headers: {
@@ -79,7 +79,7 @@
       revokeKey: async function (keyPrefix) {
         try {
           const response = await fetch(
-            `/api/key/${keyPrefix}`,
+            `/keys/${keyPrefix}`,
             {
               method: "DELETE",
               headers: {

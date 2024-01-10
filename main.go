@@ -59,13 +59,13 @@ func main() {
 	r.Get("/auth", appHandler.RenderAuthPage)
 
 	r.Route("/api", func(r chi.Router) {
-		r.Post("/auth", authHandler.Authicate)
+		r.Post("/auth", authHandler.Authenticate)
 	})
 
 	r.Route("/keys", func(r chi.Router) {
 		r.With(authMiddleware.CookieAuth).Get("/", appHandler.GetKeysPage)
 		r.With(authMiddleware.CookieAuth).Post("/", keyHandler.Create)
-		r.With(authMiddleware.CookieAuth).Post("/{prefix}", keyHandler.Revoke)
+		r.With(authMiddleware.CookieAuth).Delete("/{prefix}", keyHandler.Revoke)
 	})
 
 	port := os.Getenv("PORT")
