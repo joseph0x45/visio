@@ -42,8 +42,6 @@ func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(filePath)
-	fmt.Println(isJPEG)
 	if !isJPEG {
 		jpegFilePath, err := pkg.PNGToJPEG(filePath)
 		if err != nil {
@@ -65,7 +63,6 @@ func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
 		}
     filePath = jpegFilePath
 	}
-  fmt.Println(filePath)
 	w.WriteHeader(http.StatusOK)
 	return
 }
