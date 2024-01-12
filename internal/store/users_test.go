@@ -3,16 +3,17 @@ package store
 import (
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
-	_ "github.com/lib/pq"
-	"github.com/ory/dockertest/v3"
-	"github.com/stretchr/testify/require"
 	"log"
 	"os"
 	"testing"
 	"time"
 	"visio/internal/types"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
+	_ "github.com/lib/pq"
+	"github.com/ory/dockertest/v3"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -167,6 +168,38 @@ func TestUsers_GetById(t *testing.T) {
 		require.NoError(t, s.Insert(&existingUser))
 
 		user, err := s.GetById("1")
+		require.Equal(t, user.Id, existingUser.Id)
+		require.Equal(t, user.Email, existingUser.Email)
+		require.Equal(t, user.PasswordHash, existingUser.PasswordHash)
+		require.Equal(t, user.SignupDate, existingUser.SignupDate)
+		require.NoError(t, err)
+
+		testDB.Exec("TRUNCATE users;")
+	})
+}
+
+func TestUsers_GetByEmail(t *testing.T) {
+	s := NewUsersStore(testDB)
+
+	t.Run("user not found", func(t *testing.T) {
+		user, err := s.GetByEmail("emailz")
+		require.Nil(t, user)
+		require.Equal(t, err, types.ErrUserNotFound)
+
+		testDB.Exec("TRUNCATE users;")
+	})
+
+	t.Run("user exists", func(t *testing.T) {
+		existingUser := types.User{
+			Id:           "1",
+			Email:        "emailz",
+			PasswordHash: "passwordz",
+			SignupDate:   time.Now().Truncate(time.Hour).UTC().Format("January, 2 2006"),
+		}
+
+		require.NoError(t, s.Insert(&existingUser))
+
+		user, err := s.GetByEmail("emailz")
 		require.Equal(t, user.Id, existingUser.Id)
 		require.Equal(t, user.Email, existingUser.Email)
 		require.Equal(t, user.PasswordHash, existingUser.PasswordHash)
