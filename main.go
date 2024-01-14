@@ -40,7 +40,7 @@ func main() {
 	appHandler := handlers.NewAppHandler(keys, appLogger)
 	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
 	keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
-	recognizer, err := face.NewRecognizer("")
+	recognizer, err := face.NewRecognizer(os.Getenv("MODELS_DIR"))
 	if err != nil {
 		panic(fmt.Sprintf("Error while initializing recognizer: %s", err.Error()))
 	}
@@ -85,7 +85,7 @@ func main() {
 		panic("Unable to read PORT environment variable")
 	}
 	fmt.Printf("Server listening on port %s\n", port)
-	err := http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		panic(err)
 	}
