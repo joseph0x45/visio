@@ -71,7 +71,7 @@ func main() {
 	})
 
 	r.Route("/faces", func(r chi.Router) {
-		r.With(uploadMiddleware.HandleUploads).Post("/", faceHandler.SaveFace)
+		r.With(uploadMiddleware.HandleUploads(2)).Post("/", faceHandler.SaveFace)
 	})
 
 	port := os.Getenv("PORT")
