@@ -3,8 +3,6 @@ package main
 import (
 	"embed"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,6 +10,10 @@ import (
 	"visio/internal/handlers"
 	"visio/internal/middlewares"
 	"visio/internal/store"
+
+	"github.com/Kagami/go-face"
+	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 )
 
 //go:embed views/*
@@ -38,7 +40,11 @@ func main() {
 	appHandler := handlers.NewAppHandler(keys, appLogger)
 	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
 	keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
-	faceHandler := handlers.NewFaceHandler(appLogger)
+	recognizer, err := face.NewRecognizer("")
+	if err != nil {
+		panic(fmt.Sprintf("Error while initializing recognizer: %s", err.Error()))
+	}
+	faceHandler := handlers.NewFaceHandler(appLogger, recognizer)
 	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
 	uploadMiddleware := middlewares.NewUploadMiddleware(appLogger)
 
