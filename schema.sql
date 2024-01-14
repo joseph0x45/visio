@@ -13,3 +13,11 @@ create table if not exists keys (
   creation_date text not null,
   unique (user_id, prefix)
 );
+
+create table if not exists faces (
+  id text not null primary key,
+  label text not null,
+  user_id text not null references users(id),
+  descriptor text not null,
+  unique (label, user_id)
+);

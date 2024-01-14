@@ -3,8 +3,6 @@ package main
 import (
 	"embed"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,6 +10,10 @@ import (
 	"visio/internal/handlers"
 	"visio/internal/middlewares"
 	"visio/internal/store"
+
+	"github.com/Kagami/go-face"
+	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 )
 
 //go:embed views/*
@@ -33,13 +35,19 @@ func main() {
 	users := store.NewUsersStore(postgresPool)
 	sessions := store.NewSessionsStore(redisClient)
 	keys := store.NewKeysStore(postgresPool)
+  faces := store.NewFacesStore(postgresPool)
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	appLogger := slog.New(textHandler)
 	appHandler := handlers.NewAppHandler(keys, appLogger)
 	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
 	keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
-	faceHandler := handlers.NewFaceHandler(appLogger)
+	recognizer, err := face.NewRecognizer(os.Getenv("MODELS_DIR"))
+	if err != nil {
+		panic(fmt.Sprintf("Error while initializing recognizer: %s", err.Error()))
+	}
+	faceHandler := handlers.NewFaceHandler(appLogger, recognizer, faces)
 	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
+	uploadMiddleware := middlewares.NewUploadMiddleware(appLogger)
 
 	r := chi.NewRouter()
 
@@ -70,7 +78,7 @@ func main() {
 	})
 
 	r.Route("/faces", func(r chi.Router) {
-		r.Post("/", faceHandler.SaveFace)
+		r.With(uploadMiddleware.HandleUploads(1)).Post("/", faceHandler.SaveFace)
 	})
 
 	port := os.Getenv("PORT")
@@ -78,7 +86,7 @@ func main() {
 		panic("Unable to read PORT environment variable")
 	}
 	fmt.Printf("Server listening on port %s\n", port)
-	err := http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		panic(err)
 	}

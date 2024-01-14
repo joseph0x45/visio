@@ -1,71 +1,78 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
+	"github.com/Kagami/go-face"
+	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"net/http"
-	"os"
+	"visio/internal/store"
 	"visio/internal/types"
-	"visio/pkg"
 )
 
 type FaceHandler struct {
-	logger *slog.Logger
+	logger     *slog.Logger
+	recognizer *face.Recognizer
+	faces      *store.Faces
 }
 
-func NewFaceHandler(logger *slog.Logger) *FaceHandler {
+func NewFaceHandler(logger *slog.Logger, recognizer *face.Recognizer, faces *store.Faces) *FaceHandler {
 	return &FaceHandler{
-		logger: logger,
+		logger:     logger,
+		recognizer: recognizer,
+		faces:      faces,
 	}
 }
 
 func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
-	filePath, err, isJPEG := pkg.HandleFileUpload(w, r)
+	faces, ok := r.Context().Value("faces").([]string)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	facePath := faces[0]
+	label, ok := r.Context().Value("label").(string)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	count, err := h.faces.CountByLabel(label)
 	if err != nil {
-		if errors.Is(err, types.ErrFileNotFound) {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(types.ErrFileNotFoundMessage))
-			return
-		}
-		if errors.Is(err, types.ErrUnsupportedFormat) {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(types.ErrUnsupportedFormatMessage))
-			return
-		}
-		if errors.Is(err, types.ErrBodyTooLarge) {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(types.ErrBodyTooLargeMessage))
-			return
-		}
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(filePath)
-	fmt.Println(isJPEG)
-	if !isJPEG {
-		jpegFilePath, err := pkg.PNGToJPEG(filePath)
-		if err != nil {
-			h.logger.Error(err.Error())
-			err = os.Remove(filePath)
-			if err != nil {
-				h.logger.Error(fmt.Sprintf("Failed to delete file: %s", err.Error()))
-			}
-			err = os.Remove(jpegFilePath)
-			if err != nil {
-				h.logger.Error(fmt.Sprintf("Failed to delete file: %s", err.Error()))
-			}
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		err = os.Remove(filePath)
-		if err != nil {
-			h.logger.Error(fmt.Sprintf("Failed to delete file: %s", err.Error()))
-		}
-    filePath = jpegFilePath
+	if count > 0 {
+		w.WriteHeader(http.StatusConflict)
+		return
 	}
-  fmt.Println(filePath)
-	w.WriteHeader(http.StatusOK)
+	recognizedFaces, err := h.recognizer.RecognizeFile(facePath)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while recognizing file: %s", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(recognizedFaces) > 1 {
+		http.Error(w, "More than one face detected on image", http.StatusBadRequest)
+		return
+	}
+	if len(recognizedFaces) == 0 {
+		http.Error(w, "No face detected on image", http.StatusBadRequest)
+		return
+	}
+	recognizedFace := recognizedFaces[0]
+	newFace := &types.Face{
+		Id:         ulid.Make().String(),
+		Label:      label,
+		UserId:     "01HM54P0CZY4PPK9C8PGM2Z60J",
+		Descriptor: fmt.Sprintf("%v", recognizedFace.Descriptor),
+	}
+	err = h.faces.Save(newFace)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 	return
 }
