@@ -40,6 +40,7 @@ func main() {
 	keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
 	faceHandler := handlers.NewFaceHandler(appLogger)
 	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
+	uploadMiddleware := middlewares.NewUploadMiddleware(appLogger)
 
 	r := chi.NewRouter()
 
@@ -70,7 +71,7 @@ func main() {
 	})
 
 	r.Route("/faces", func(r chi.Router) {
-		r.Post("/", faceHandler.SaveFace)
+		r.With(uploadMiddleware.HandleUploads).Post("/", faceHandler.SaveFace)
 	})
 
 	port := os.Getenv("PORT")
