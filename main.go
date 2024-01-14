@@ -35,6 +35,7 @@ func main() {
 	users := store.NewUsersStore(postgresPool)
 	sessions := store.NewSessionsStore(redisClient)
 	keys := store.NewKeysStore(postgresPool)
+  faces := store.NewFacesStore(postgresPool)
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	appLogger := slog.New(textHandler)
 	appHandler := handlers.NewAppHandler(keys, appLogger)
@@ -44,7 +45,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Error while initializing recognizer: %s", err.Error()))
 	}
-	faceHandler := handlers.NewFaceHandler(appLogger, recognizer)
+	faceHandler := handlers.NewFaceHandler(appLogger, recognizer, faces)
 	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
 	uploadMiddleware := middlewares.NewUploadMiddleware(appLogger)
 
