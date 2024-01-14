@@ -97,7 +97,10 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 				}
 				facesPaths = append(facesPaths, f.Name())
 			}
+			fmt.Printf("%v", facesPaths)
 			ctx := context.WithValue(r.Context(), "faces", facesPaths)
+			ctx = context.WithValue(ctx, "label", r.FormValue("label"))
+			ctx = context.WithValue(ctx, "face_id", r.FormValue("face_id"))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
