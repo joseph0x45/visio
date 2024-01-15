@@ -73,12 +73,7 @@ func (h *AuthHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		sessionId := ulid.Make().String()
-		err = h.sessions.Create(sessionId, newUser.Id)
-		if err != nil {
-			h.logger.Error(err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		h.sessions.Create(sessionId, newUser.Id)
 		authCookie := &http.Cookie{
 			Name:  "session",
 			Value: sessionId,
@@ -103,12 +98,7 @@ func (h *AuthHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		sessionId := ulid.Make().String()
-		err = h.sessions.Create(sessionId, dbUser.Id)
-		if err != nil {
-			h.logger.Error(err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		h.sessions.Create(sessionId, dbUser.Id)
 		authCookie := &http.Cookie{
 			Name:  "session",
 			Value: sessionId,
