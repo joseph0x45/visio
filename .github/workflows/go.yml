@@ -29,8 +29,8 @@ jobs:
     - name: Compile css
       run: make build-css
 
-    - name: Build
-      run: go build -v ./...
+    - name: Build Image
+      run: docker build -t visio .
 
     - name: Test
       run: go test -v ./...
