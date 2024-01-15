@@ -1,57 +1,27 @@
 package store
 
 import (
-	"context"
-	"fmt"
-	"visio/internal/types"
-
-	"github.com/redis/go-redis/v9"
+	"visio/internal/database"
 )
 
 type Sessions struct {
-	redis *redis.Client
+	manager *database.SessionManager
 }
 
-func NewSessionsStore(redis *redis.Client) *Sessions {
+func NewSessionsStore(manager *database.SessionManager) *Sessions {
 	return &Sessions{
-		redis: redis,
+		manager: manager,
 	}
 }
 
-func (s *Sessions) Create(id, value string) error {
-	err := s.redis.Set(
-		context.Background(),
-		id,
-		value,
-		0,
-	).Err()
-	if err != nil {
-		return fmt.Errorf("Error while creating new session: %w", err)
-	}
-	return nil
+func (s *Sessions) Create(id, sessionUser string) {
+	s.manager.CreateSession(id, sessionUser)
 }
 
-func (s *Sessions) Get(id string) (string, error) {
-	sessionValue, err := s.redis.Get(
-		context.Background(),
-		id,
-	).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return "", types.ErrSessionNotFound
-		}
-		return "", fmt.Errorf("Error while getting session: %w", err)
-	}
-	return sessionValue, nil
+func (s *Sessions) Get(id string) string {
+	return s.manager.GetSession(id)
 }
 
-func (s *Sessions) Delete(id string) error {
-	err := s.redis.Del(
-		context.Background(),
-		id,
-	).Err()
-	if err != nil {
-		return fmt.Errorf("Error while deleting session: %w", err)
-	}
-	return nil
+func (s *Sessions) Delete(id string) {
+	s.manager.DeleteSession(id)
 }
