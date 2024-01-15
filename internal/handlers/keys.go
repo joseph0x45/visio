@@ -87,8 +87,9 @@ func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := json.Marshal(
 		map[string]interface{}{
-			"data": map[string]string{
-				"key": key,
+			"data": map[string]interface{}{
+				"naked_key":  key,
+				"key_object": newKey,
 			},
 		},
 	)

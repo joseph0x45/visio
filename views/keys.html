@@ -53,7 +53,6 @@
       createKey: async function () {
         creating_key = true
         try {
-          console.log("Creating key")
           const response = await fetch(
             `/keys`,
             {
@@ -67,7 +66,10 @@
           const {status} = response
           switch (status) {
             case 201:
-              window.location.reload()
+              const {data: {naked_key, key_object}} = await response.json()
+              console.log(naked_key)
+              this.keys.push(key_object)
+              // window.location.reload()
               break
             case 401:
               window.location.href = "/auth"
