@@ -68,6 +68,7 @@
             case 201:
               const {data: {naked_key, key_object}} = await response.json()
               this.keys.push(key_object)
+              alert(`Here is your key "${naked_key}"\nMake sure to copy and store it in a safe place.\nOnce you dismiss this you will not be able to see it again`)
               break
             case 401:
               window.location.href = "/auth"

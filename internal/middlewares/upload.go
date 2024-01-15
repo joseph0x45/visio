@@ -78,6 +78,10 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 				_, err = io.Copy(f, file)
 				if err != nil {
 					m.logger.Error(fmt.Sprintf("Error while copying bytes to file: %s", err.Error()))
+					err = os.Remove(f.Name())
+					if err != nil {
+						m.logger.Debug(fmt.Sprintf("Error while deleting file %s: %s", f.Name(), err.Error()))
+					}
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
@@ -85,6 +89,10 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 					jpegFile, err := pkg.PNGToJPEG(f.Name())
 					if err != nil {
 						m.logger.Error(err.Error())
+						err = os.Remove(f.Name())
+						if err != nil {
+							m.logger.Debug(fmt.Sprintf("Error while deleting PNG file: %s", err.Error()))
+						}
 						w.WriteHeader(http.StatusInternalServerError)
 						return
 					}
