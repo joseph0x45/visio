@@ -35,7 +35,7 @@ func main() {
 	users := store.NewUsersStore(postgresPool)
 	sessions := store.NewSessionsStore(redisClient)
 	keys := store.NewKeysStore(postgresPool)
-  faces := store.NewFacesStore(postgresPool)
+	faces := store.NewFacesStore(postgresPool)
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	appLogger := slog.New(textHandler)
 	appHandler := handlers.NewAppHandler(keys, appLogger)
@@ -46,7 +46,7 @@ func main() {
 		panic(fmt.Sprintf("Error while initializing recognizer: %s", err.Error()))
 	}
 	faceHandler := handlers.NewFaceHandler(appLogger, recognizer, faces)
-	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, appLogger)
+	authMiddleware := middlewares.NewAuthMiddleware(sessions, users, keys, appLogger)
 	uploadMiddleware := middlewares.NewUploadMiddleware(appLogger)
 
 	r := chi.NewRouter()
@@ -78,7 +78,7 @@ func main() {
 	})
 
 	r.Route("/faces", func(r chi.Router) {
-		r.With(uploadMiddleware.HandleUploads(1)).Post("/", faceHandler.SaveFace)
+		r.With(authMiddleware.KeyAuth).With(uploadMiddleware.HandleUploads(1)).Post("/", faceHandler.SaveFace)
 	})
 
 	port := os.Getenv("PORT")

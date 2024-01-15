@@ -1,9 +1,9 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
 	"visio/internal/types"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -44,6 +44,22 @@ func (k *Keys) CountByOwnerId(userId string) (int, error) {
 		return 0, fmt.Errorf("Error while counting keys by owner id: %w", err)
 	}
 	return count, nil
+}
+
+func (k *Keys) GetByPrefix(prefix string) (*types.Key, error) {
+	key := new(types.Key)
+	err := k.db.Get(
+		key,
+		"select * from keys where prefix=$1",
+		prefix,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, types.ErrKeyNotFound
+		}
+		return nil, fmt.Errorf("Error while retrieving key by prefix: %w", err)
+	}
+	return key, nil
 }
 
 func (k *Keys) GetByUserId(id string) ([]types.Key, error) {

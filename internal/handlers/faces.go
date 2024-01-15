@@ -25,6 +25,11 @@ func NewFaceHandler(logger *slog.Logger, recognizer *face.Recognizer, faces *sto
 }
 
 func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	faces, ok := r.Context().Value("faces").([]string)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -64,7 +69,7 @@ func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
 	newFace := &types.Face{
 		Id:         ulid.Make().String(),
 		Label:      label,
-		UserId:     "01HM54P0CZY4PPK9C8PGM2Z60J",
+		UserId:     currentUser,
 		Descriptor: fmt.Sprintf("%v", recognizedFace.Descriptor),
 	}
 	err = h.faces.Save(newFace)

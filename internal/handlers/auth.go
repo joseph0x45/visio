@@ -98,7 +98,7 @@ func (h *AuthHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		if !pkg.PasswordMatches(payload.Password, dbUser.PasswordHash) {
+		if !pkg.HashMatches(payload.Password, dbUser.PasswordHash) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
