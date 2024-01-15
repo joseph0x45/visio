@@ -51,7 +51,7 @@
       creating_key: false,
       keys: JSON.parse(keysData),
       createKey: async function () {
-        creating_key = true
+        this.creating_key = true
         try {
           const response = await fetch(
             `/keys`,
@@ -62,20 +62,19 @@
               }
             }
           )
-          creating_key = false
+          this.creating_key = false
           const {status} = response
           switch (status) {
             case 201:
               const {data: {naked_key, key_object}} = await response.json()
-              console.log(naked_key)
               this.keys.push(key_object)
-              // window.location.reload()
               break
             case 401:
               window.location.href = "/auth"
               break
             case 403:
               alert("You can not create more than 5 keys")
+              window.location.reload()
               break
             case 500:
               alert("Something went wrong. Please retry or contact us")
@@ -99,7 +98,7 @@
           const {status} = response
           switch (status) {
             case 200:
-              window.location.reload()
+              this.keys = this.keys.filter((key)=>key.prefix!==keyPrefix)
               break
             case 401:
               window.location.href = "/auth"

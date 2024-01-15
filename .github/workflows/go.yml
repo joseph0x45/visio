@@ -23,13 +23,18 @@ jobs:
       with:
         node-version: 18
 
-    - name: Install dependencies
+    - name: Install tailwind dependencies
       run: npm ci
 
     - name: Compile css
       run: make build-css
 
-    - name: Build
+    - name: Install Visio build dependencies
+      run: | 
+        sudo apt-get update
+        sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev
+
+    - name: Build binary
       run: go build -v ./...
 
     - name: Test
