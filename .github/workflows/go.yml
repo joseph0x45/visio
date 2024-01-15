@@ -9,7 +9,7 @@ on:
 jobs:
 
   build:
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
@@ -32,7 +32,7 @@ jobs:
     - name: Install Visio build dependencies
       run: | 
         sudo apt-get update
-        sudo apt-get -y install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev wget
+        sudo apt-get install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg-turbo8-dev
 
     - name: Build binary
       run: go build -v ./...
