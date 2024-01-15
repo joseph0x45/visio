@@ -10,12 +10,6 @@ services:
       POSTGRES_PASSWORD: pwd
     ports:
       - "5432:5432"
-
-  redis:
-    image: redis
-    container_name: redis
-    ports:
-      - "6379:6379"
   
   visio:
     build:
