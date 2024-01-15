@@ -31,8 +31,8 @@ jobs:
 
     - name: Install Visio build dependencies
       run: | 
-        apt-get update
-        apt-get -y install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev wget
+        sudo apt-get update
+        sudo apt-get -y install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev wget
 
     - name: Build binary
       run: go build -v ./...
