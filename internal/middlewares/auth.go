@@ -3,7 +3,6 @@ package middlewares
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -33,26 +32,14 @@ func (m *AuthMiddleware) CookieAuth(next http.Handler) http.Handler {
 		sessionCookie, err := r.Cookie("session")
 		if err != nil {
 			if err == http.ErrNoCookie {
-				fmt.Println("No cookie? ;(")
 				http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
 				return
 			}
 		}
-		sessionValue, err := m.sessions.Get(sessionCookie.Value)
-		if err != nil {
-			if errors.Is(err, types.ErrSessionNotFound) {
-				fmt.Println("No session 0_0")
-				http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
-				return
-			}
-			m.logger.Error(err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		sessionValue := m.sessions.Get(sessionCookie.Value)
 		sessionUser, err := m.users.GetById(sessionValue)
 		if err != nil {
 			if errors.Is(err, types.ErrUserNotFound) {
-				fmt.Println("No user o_o")
 				http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
 				return
 			}

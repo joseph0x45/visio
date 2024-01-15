@@ -31,9 +31,9 @@ func main() {
 		}
 	}
 	postgresPool := database.NewPostgresPool()
-	redisClient := database.GetRedisClient()
 	users := store.NewUsersStore(postgresPool)
-	sessions := store.NewSessionsStore(redisClient)
+  sessionManager := database.NewSessionManager()
+	sessions := store.NewSessionsStore(sessionManager)
 	keys := store.NewKeysStore(postgresPool)
 	faces := store.NewFacesStore(postgresPool)
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})

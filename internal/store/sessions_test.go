@@ -1,97 +1,35 @@
 package store
 
 import (
-	"errors"
-	"fmt"
 	"testing"
-	"visio/internal/types"
-	"github.com/ory/dockertest/v3"
-	"github.com/redis/go-redis/v9"
+	"visio/internal/database"
 )
 
-type testCase struct {
-	Name         string
-	SessionId    string
-	SessionValue string
-	TestFunc     func(sessions *Sessions, tc *testCase) error
-	ExpectedErr  error
-}
-
-func (t *testCase) Run(sessions *Sessions) error {
-	return t.TestFunc(sessions, t)
-}
-
-var testCases = []testCase{
-	{
-		Name:         "Create session",
-		SessionId:    "Session1",
-		SessionValue: "Session1Value",
-		TestFunc: func(sessions *Sessions, tc *testCase) error {
-			return sessions.Create(tc.SessionId, tc.SessionValue)
-		},
-		ExpectedErr: nil,
-	},
-	{
-		Name:         "Retrieve session using it's id",
-		SessionId:    "Session1",
-		SessionValue: "Session1Value",
-		TestFunc: func(sessions *Sessions, tc *testCase) error {
-			sessionValue, err := sessions.Get(tc.SessionId)
-			if err != nil {
-				return err
-			}
-			if sessionValue != tc.SessionValue {
-				return fmt.Errorf("Invalid session value returned: Wanted %s got %s", tc.SessionValue, sessionValue)
-			}
-			return nil
-		},
-		ExpectedErr: nil,
-	},
-	{
-		Name:      "Retrieve session using a non-existent id",
-		SessionId: "RandomId",
-		TestFunc: func(sessions *Sessions, tc *testCase) error {
-			_, err := sessions.Get(tc.SessionId)
-			return err
-		},
-		ExpectedErr: types.ErrSessionNotFound,
-	},
-}
-
 func TestSession(t *testing.T) {
-	var redisClient *redis.Client
-	var err error
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		t.Fatalf("Failed to create pool: %s", err)
-	}
-	err = pool.Client.Ping()
-	if err != nil {
-		t.Fatalf("Failed to connect to Docker: %s", err)
-	}
-	resource, err := pool.Run("redis", "latest", nil)
-	if err != nil {
-		t.Fatalf("Failed to run Redis container: %s", err)
-	}
-	if err = pool.Retry(func() error {
-		redisClient = redis.NewClient(&redis.Options{
-			Addr: fmt.Sprintf("localhost:%s", resource.GetPort("6379/tcp")),
-		})
-		sessions := NewSessionsStore(redisClient)
-		for _, tc := range testCases {
-			t.Run(tc.Name, func(t *testing.T) {
-				err = tc.Run(sessions)
-				if !errors.Is(err, tc.ExpectedErr) {
-					t.Fatalf("Wanted %q got %q ", tc.ExpectedErr, err)
-				}
-			})
-		}
-		return nil
-	}); err != nil {
-		t.Fatalf("Failed to connect to Redis: %s", err)
-	}
+	sessionManager := database.NewSessionManager()
+	t.Run("Create session", func(t *testing.T) {
+		sessionManager.CreateSession("session", "userId")
+	})
 
-	if err = pool.Purge(resource); err != nil {
-		t.Fatalf("Failed to purge resource: %s", err)
-	}
+	t.Run("Get session", func(t *testing.T) {
+		sessionValue := sessionManager.GetSession("session")
+		if sessionValue != "userId" {
+			t.Fatalf("Wanted %s got %s", "userId", sessionValue)
+		}
+	})
+
+	t.Run("Get non existing session", func(t *testing.T) {
+		sessionValue := sessionManager.GetSession("random")
+		if sessionValue != "" {
+			t.Fatalf("Wanted empty string got %s", sessionValue)
+		}
+	})
+
+	t.Run("Delete session", func(t *testing.T) {
+		sessionManager.DeleteSession("session")
+		v := sessionManager.GetSession("session")
+		if v != "" {
+			t.Fatalf("Wanted empty string got %s", v)
+		}
+	})
 }
