@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/Kagami/go-face"
-	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"net/http"
 	"visio/internal/store"
 	"visio/internal/types"
+	"visio/pkg"
+
+	"github.com/Kagami/go-face"
+	"github.com/oklog/ulid/v2"
 )
 
 type FaceHandler struct {
@@ -35,6 +37,12 @@ func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	defer func() {
+		deleteErrors := pkg.CleanupFiles(faces)
+		for _, err := range deleteErrors {
+			h.logger.Debug(err.Error())
+		}
+	}()
 	facePath := faces[0]
 	label, ok := r.Context().Value("label").(string)
 	if !ok {
