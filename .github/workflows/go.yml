@@ -23,14 +23,19 @@ jobs:
       with:
         node-version: 18
 
-    - name: Install dependencies
+    - name: Install tailwind dependencies
       run: npm ci
 
     - name: Compile css
       run: make build-css
 
-    - name: Build Image
-      run: docker build -t visio .
+    - name: Install Visio build dependencies
+      run: | 
+        apt-get update
+        apt-get -y install libdlib-dev libblas-dev libatlas-base-dev liblapack-dev libjpeg62-turbo-dev wget
+
+    - name: Build binary
+      run: go build -v ./...
 
     - name: Test
       run: go test -v ./...
