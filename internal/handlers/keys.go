@@ -35,7 +35,7 @@ func NewKeyHandler(keysStore *store.Keys, sessionsStore *store.Sessions, logger 
 }
 
 func generateRandomString(length int) string {
-	const CHARACTER_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-_=+:;'/?><|"
+	const CHARACTER_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-_=+:;?><|"
 	key := ""
 	for i := 0; i < length; i++ {
 		idx := rand.Intn(len(CHARACTER_POOL))
