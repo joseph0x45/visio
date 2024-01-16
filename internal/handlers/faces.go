@@ -189,3 +189,28 @@ func (h *FaceHandler) DeleteFace(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	return
 }
+
+func (h *FaceHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	faces, err := h.faces.GetByUserId(currentUser)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	data, err := json.Marshal(map[string]interface{}{
+		"data": faces,
+	})
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
+}
