@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Kagami/go-face"
-	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"net/http"
 	"visio/internal/store"
 	"visio/internal/types"
 	"visio/pkg"
+
+	"github.com/Kagami/go-face"
+	"github.com/go-chi/chi/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 type FaceHandler struct {
@@ -164,5 +166,26 @@ func (h *FaceHandler) CompareSavedFaces(w http.ResponseWriter, r *http.Request) 
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+	return
+}
+
+func (h *FaceHandler) DeleteFace(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	faceId := chi.URLParam(r, "id")
+	if faceId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err := h.faces.Delete(faceId, currentUser)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 	return
 }
