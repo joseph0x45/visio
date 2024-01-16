@@ -39,10 +39,16 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 			}
 			faces := r.MultipartForm.File["faces"]
 			if len(faces) != requiredImages {
-        http.Error(w, "Incorrect number of files uploaded (either too much or not enough). Please check the docs", http.StatusBadRequest)
+				http.Error(w, "Incorrect number of files uploaded (either too much or not enough). Please check the docs", http.StatusBadRequest)
 				return
 			}
 			facesPaths := []string{}
+			defer func() {
+				deleteErrors := pkg.CleanupFiles(facesPaths)
+				for _, err := range deleteErrors {
+					m.logger.Debug(err.Error())
+				}
+			}()
 			for _, fileHeader := range faces {
 				file, err := fileHeader.Open()
 				if err != nil {
@@ -60,7 +66,7 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 				}
 				fileType := http.DetectContentType(buffer)
 				if fileType != "image/jpeg" && fileType != "image/png" {
-          http.Error(w, "Unsupported file type. Only image/jpeg and image/png are valid", http.StatusBadRequest)
+					http.Error(w, "Unsupported file type. Only image/jpeg and image/png are valid", http.StatusBadRequest)
 					return
 				}
 				_, err = file.Seek(0, io.SeekStart)
@@ -69,7 +75,7 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
-				f, err := os.CreateTemp("./", "")
+				f, err := os.CreateTemp("", "")
 				if err != nil {
 					m.logger.Error(fmt.Sprintf("Error while creating temp file: %s", err.Error()))
 					w.WriteHeader(http.StatusInternalServerError)
