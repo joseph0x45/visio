@@ -39,7 +39,7 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 			}
 			faces := r.MultipartForm.File["faces"]
 			if len(faces) != requiredImages {
-				w.WriteHeader(http.StatusBadRequest)
+        http.Error(w, "Incorrect number of files uploaded (either too much or not enough). Please check the docs", http.StatusBadRequest)
 				return
 			}
 			facesPaths := []string{}
@@ -60,7 +60,7 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 				}
 				fileType := http.DetectContentType(buffer)
 				if fileType != "image/jpeg" && fileType != "image/png" {
-					w.WriteHeader(http.StatusBadRequest)
+          http.Error(w, "Unsupported file type. Only image/jpeg and image/png are valid", http.StatusBadRequest)
 					return
 				}
 				_, err = file.Seek(0, io.SeekStart)
@@ -69,7 +69,7 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
-				f, err := os.CreateTemp("", "")
+				f, err := os.CreateTemp("./", "")
 				if err != nil {
 					m.logger.Error(fmt.Sprintf("Error while creating temp file: %s", err.Error()))
 					w.WriteHeader(http.StatusInternalServerError)
@@ -108,6 +108,8 @@ func (m *UploadMiddleware) HandleUploads(requiredImages int) func(next http.Hand
 			ctx := context.WithValue(r.Context(), "faces", facesPaths)
 			ctx = context.WithValue(ctx, "label", r.FormValue("label"))
 			ctx = context.WithValue(ctx, "face_id", r.FormValue("face_id"))
+			ctx = context.WithValue(ctx, "subject", r.FormValue("subject"))
+			ctx = context.WithValue(ctx, "object", r.FormValue("object"))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

@@ -54,7 +54,7 @@ func (m *AuthMiddleware) CookieAuth(next http.Handler) http.Handler {
 
 func (m *AuthMiddleware) KeyAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		apiKey := r.Header.Get("x-API-KEY")
+		apiKey := r.Header.Get("X-API-KEY")
 		if apiKey == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
