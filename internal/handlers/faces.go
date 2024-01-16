@@ -258,3 +258,72 @@ func (h *FaceHandler) CompareUploaded(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 	return
 }
+
+func (h *FaceHandler) CompareMixt(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	faces, ok := r.Context().Value("faces").([]string)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(faces) != 1 {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	subject, ok := r.Context().Value("subject").(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	if subject == "" {
+		http.Error(w, "Missing field 'subject' in request body", http.StatusBadRequest)
+		return
+	}
+	uploadedFace, err := h.recognizer.RecognizeFile(faces[0])
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while recognizing file: %s", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(uploadedFace) == 0 {
+		http.Error(w, "No face detected on image", http.StatusBadRequest)
+		return
+	}
+	if len(uploadedFace) > 1 {
+		http.Error(w, "More than one face detected on image", http.StatusBadRequest)
+		return
+	}
+	savedFace, err := h.faces.GetById(subject, currentUser)
+	if err != nil {
+		if errors.Is(err, types.ErrFaceNotFound) {
+			http.Error(w, fmt.Sprintf("Image with id %s not found", subject), http.StatusBadRequest)
+			return
+		}
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	var descriptor face.Descriptor
+	err = json.Unmarshal([]byte(savedFace.Descriptor), &descriptor)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while unmarshalling descriptor: %s", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	distance := face.SquaredEuclideanDistance(descriptor, uploadedFace[0].Descriptor)
+	data, err := json.Marshal(map[string]interface{}{
+		"distance": distance,
+	})
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while marshalling response: %s", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
+}

@@ -3,6 +3,9 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/Kagami/go-face"
+	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,10 +13,6 @@ import (
 	"visio/internal/handlers"
 	"visio/internal/middlewares"
 	"visio/internal/store"
-
-	"github.com/Kagami/go-face"
-	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
 )
 
 //go:embed views/*
@@ -84,6 +83,7 @@ func main() {
 		r.With(authMiddleware.KeyAuth).Route("/compare", func(r chi.Router) {
 			r.With(uploadMiddleware.HandleUploads(2)).Post("/", faceHandler.CompareUploaded)
 			r.With(uploadMiddleware.HandleUploads(0)).Post("/saved", faceHandler.CompareSavedFaces)
+			r.With(uploadMiddleware.HandleUploads(1)).Post("/mixed", faceHandler.CompareMixt)
 		})
 	})
 
