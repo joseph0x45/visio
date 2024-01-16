@@ -4,15 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Kagami/go-face"
+	"github.com/go-chi/chi/v5"
+	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"net/http"
 	"visio/internal/store"
 	"visio/internal/types"
-	"visio/pkg"
-
-	"github.com/Kagami/go-face"
-	"github.com/go-chi/chi/v5"
-	"github.com/oklog/ulid/v2"
 )
 
 type FaceHandler struct {
@@ -40,12 +38,6 @@ func (h *FaceHandler) SaveFace(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer func() {
-		deleteErrors := pkg.CleanupFiles(faces)
-		for _, err := range deleteErrors {
-			h.logger.Debug(err.Error())
-		}
-	}()
 	facePath := faces[0]
 	label, ok := r.Context().Value("label").(string)
 	if !ok {
@@ -156,9 +148,10 @@ func (h *FaceHandler) CompareSavedFaces(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	distance := face.SquaredEuclideanDistance(objFaceDescriptor, subFaceDescriptor)
-	data, err := json.Marshal(map[string]float64{
+	data, err := json.Marshal(map[string]interface{}{
 		"distance": distance,
-	})
+	},
+	)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Error while marshalling response: %s", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -207,6 +200,57 @@ func (h *FaceHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
+}
+
+func (h *FaceHandler) CompareUploaded(w http.ResponseWriter, r *http.Request) {
+	_, ok := r.Context().Value("currentUser").(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	faces, ok := r.Context().Value("faces").([]string)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(faces) != 2 {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	detectedFaces := []*face.Face{}
+	for i := 0; i < 2; i++ {
+		facesOnImage, err := h.recognizer.RecognizeFile(faces[i])
+		if err != nil {
+			h.logger.Error(fmt.Sprintf("Error while recognizing file: %s", err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if len(facesOnImage) == 0 {
+			http.Error(w, "No face detected on one of the images", http.StatusBadRequest)
+			return
+		}
+		if len(facesOnImage) > 1 {
+			http.Error(w, "More than one face detected on one of the images", http.StatusBadRequest)
+			return
+		}
+		detectedFaces = append(detectedFaces, &facesOnImage[0])
+	}
+	distance := face.SquaredEuclideanDistance(
+		detectedFaces[0].Descriptor,
+		detectedFaces[1].Descriptor,
+	)
+	data, err := json.Marshal(map[string]interface{}{
+		"distance": distance,
+	},
+	)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while marshalling response: %s", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
