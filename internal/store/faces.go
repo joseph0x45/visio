@@ -51,7 +51,7 @@ func (f *Faces) GetById(id, userId string) (*types.Face, error) {
 		face,
 		"select * from faces where id=$1 and user_id=$2",
 		id,
-    userId,
+		userId,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -60,4 +60,12 @@ func (f *Faces) GetById(id, userId string) (*types.Face, error) {
 		return nil, fmt.Errorf("Error while querying face: %w", err)
 	}
 	return face, nil
+}
+
+func (f *Faces) Delete(id, userId string) error {
+	_, err := f.db.Exec("delete from faces where id=$1 and user_id=$2", id, userId)
+	if err != nil {
+		return fmt.Errorf("Error while deleting face: %w", err)
+	}
+	return nil
 }
