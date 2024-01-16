@@ -158,7 +158,7 @@ func (h *FaceHandler) CompareSavedFaces(w http.ResponseWriter, r *http.Request) 
 		"distance": distance,
 	})
 	if err != nil {
-		h.logger.Error(fmt.Sprintf("Error while marshalling response: %w", err))
+		h.logger.Error(fmt.Sprintf("Error while marshalling response: %s", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
