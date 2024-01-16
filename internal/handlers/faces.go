@@ -147,7 +147,7 @@ func (h *FaceHandler) CompareSavedFaces(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	var objFaceDescriptor face.Descriptor
-	err = json.Unmarshal([]byte(objFace.Descriptor), &subFaceDescriptor)
+	err = json.Unmarshal([]byte(objFace.Descriptor), &objFaceDescriptor)
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Error while unmarshalling descriptor: %s", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
