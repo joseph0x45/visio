@@ -62,6 +62,19 @@ func (f *Faces) GetById(id, userId string) (*types.Face, error) {
 	return face, nil
 }
 
+func (f *Faces) GetByUserId(userId string) ([]*types.Face, error) {
+	faces := []*types.Face{}
+	err := f.db.Select(
+		&faces,
+		"select * from faces where user_id=$1",
+		userId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("Error while querying faces by user_id %w", err)
+	}
+	return faces, nil
+}
+
 func (f *Faces) Delete(id, userId string) error {
 	_, err := f.db.Exec("delete from faces where id=$1 and user_id=$2", id, userId)
 	if err != nil {

@@ -32,7 +32,7 @@ func main() {
 	}
 	postgresPool := database.NewPostgresPool()
 	users := store.NewUsersStore(postgresPool)
-  sessionManager := database.NewSessionManager()
+	sessionManager := database.NewSessionManager()
 	sessions := store.NewSessionsStore(sessionManager)
 	keys := store.NewKeysStore(postgresPool)
 	faces := store.NewFacesStore(postgresPool)
@@ -80,9 +80,10 @@ func main() {
 	r.Route("/faces", func(r chi.Router) {
 		r.With(authMiddleware.KeyAuth).With(uploadMiddleware.HandleUploads(1)).Post("/", faceHandler.SaveFace)
 		r.With(authMiddleware.KeyAuth).Delete("/{id}", faceHandler.DeleteFace)
-    r.With(authMiddleware.KeyAuth).Route("/compare", func(r chi.Router) {
-      r.With(uploadMiddleware.HandleUploads(0)).Post("/saved", faceHandler.CompareSavedFaces)
-    })
+		r.With(authMiddleware.KeyAuth).Get("/", faceHandler.GetAll)
+		r.With(authMiddleware.KeyAuth).Route("/compare", func(r chi.Router) {
+			r.With(uploadMiddleware.HandleUploads(0)).Post("/saved", faceHandler.CompareSavedFaces)
+		})
 	})
 
 	port := os.Getenv("PORT")
