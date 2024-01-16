@@ -183,6 +183,38 @@ func (h *FaceHandler) DeleteFace(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (h *FaceHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	faceId := chi.URLParam(r, "id")
+	if faceId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	dbFace, err := h.faces.GetById(faceId, currentUser)
+	if err != nil {
+		if errors.Is(err, types.ErrFaceNotFound) {
+			http.Error(w, fmt.Sprintf("Face with id %s not found", faceId), http.StatusNotFound)
+			return
+		}
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	data, err := json.Marshal(dbFace)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while marshalling data: %s", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
+}
+
 func (h *FaceHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := r.Context().Value("currentUser").(string)
 	if !ok {
