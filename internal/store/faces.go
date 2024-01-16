@@ -1,8 +1,10 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
 	"visio/internal/types"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -41,4 +43,21 @@ func (f *Faces) Save(face *types.Face) error {
 		return fmt.Errorf("Error while inserting face: %w", err)
 	}
 	return nil
+}
+
+func (f *Faces) GetById(id, userId string) (*types.Face, error) {
+	face := new(types.Face)
+	err := f.db.Get(
+		face,
+		"select * from faces where id=$1 and user_id=$2",
+		id,
+    userId,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, types.ErrFaceNotFound
+		}
+		return nil, fmt.Errorf("Error while querying face: %w", err)
+	}
+	return face, nil
 }

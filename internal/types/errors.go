@@ -16,4 +16,5 @@ var (
 	ErrUnsupportedFormat = errors.New(ErrUnsupportedFormatMessage)
 	ErrBodyTooLarge      = errors.New(ErrBodyTooLargeMessage)
 	ErrKeyNotFound       = errors.New("Key not found")
+	ErrFaceNotFound      = errors.New("Face not found")
 )
