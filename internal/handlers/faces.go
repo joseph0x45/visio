@@ -232,11 +232,11 @@ func (h *FaceHandler) CompareUploaded(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(facesOnImage) == 0 {
-			http.Error(w, "No face detected on image", http.StatusBadRequest)
+			http.Error(w, "No face detected on one of the images", http.StatusBadRequest)
 			return
 		}
 		if len(facesOnImage) > 1 {
-			http.Error(w, "More than one face detected on image", http.StatusBadRequest)
+			http.Error(w, "More than one face detected on one of the images", http.StatusBadRequest)
 			return
 		}
 		detectedFaces = append(detectedFaces, &facesOnImage[0])
