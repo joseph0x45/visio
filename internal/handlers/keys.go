@@ -13,6 +13,7 @@ import (
 	"visio/pkg"
 
 	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -45,6 +46,7 @@ func generateRandomString(length int) string {
 }
 
 func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
+	log := h.logger.With("requestid", chiMiddleware.GetReqID(r.Context()))
 	currentUser, ok := r.Context().Value("currentUser").(*types.User)
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -52,7 +54,7 @@ func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	keysCount, err := h.keys.CountByOwnerId(currentUser.Id)
 	if err != nil {
-		h.logger.Error(err.Error())
+		log.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -65,7 +67,7 @@ func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 	key := fmt.Sprintf("%s.%s", prefix, suffix)
 	keyHash, err := pkg.Hash(suffix)
 	if err != nil {
-		h.logger.Error(err.Error())
+		log.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -79,9 +81,9 @@ func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 	err = h.keys.Insert(newKey)
 	if err != nil {
 		if errors.Is(err, types.ErrDuplicatePrefix) {
-			h.logger.Debug("A duplicate prefix error occured")
+			log.Debug("A duplicate prefix error occured")
 		}
-		h.logger.Error(err.Error())
+		log.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -95,7 +97,7 @@ func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		//Delete created key and add header to tell client
-		h.logger.Error(err.Error())
+		log.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

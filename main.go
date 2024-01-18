@@ -3,9 +3,6 @@ package main
 import (
 	"embed"
 	"fmt"
-	"github.com/Kagami/go-face"
-	"github.com/go-chi/chi/v5"
-	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,6 +10,11 @@ import (
 	"visio/internal/handlers"
 	"visio/internal/middlewares"
 	"visio/internal/store"
+
+	"github.com/Kagami/go-face"
+	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 )
 
 //go:embed views/*
@@ -49,6 +51,7 @@ func main() {
 	uploadMiddleware := middlewares.NewUploadMiddleware(appLogger)
 
 	r := chi.NewRouter()
+	r.Use(chiMiddleware.RequestID)
 
 	r.Get("/public/output.css", func(w http.ResponseWriter, r *http.Request) {
 		css, err := publicFS.ReadFile("public/output.css")
