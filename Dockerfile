@@ -15,6 +15,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app /usr/local/bin/app
 COPY views /usr/local/bin/views
 COPY public /usr/local/bin/public
+COPY models /usr/local/bin/models
 WORKDIR /usr/local/bin
 EXPOSE 1000
 ENTRYPOINT ["app"]
