@@ -93,7 +93,7 @@ func main() {
 		panic("Unable to read PORT environment variable")
 	}
 	fmt.Printf("Server listening on port %s\n", port)
-	err = http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 	if err != nil {
 		panic(err)
 	}
