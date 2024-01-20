@@ -3,9 +3,9 @@ package store
 import (
 	"database/sql"
 	"fmt"
-	"visio/internal/types"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+	"visio/internal/types"
 )
 
 type Keys struct {
@@ -18,8 +18,8 @@ func NewKeysStore(db *sqlx.DB) *Keys {
 	}
 }
 
-func (k *Keys) Insert(key *types.Key) error {
-	_, err := k.db.NamedExec(
+func (k *Keys) Insert(key *types.Key, tx *sqlx.Tx) error {
+	_, err := tx.NamedExec(
 		`
       insert into keys(id, user_id, prefix, key_hash, creation_date)
       values (:id, :user_id, :prefix, :key_hash, :creation_date)
@@ -35,15 +35,6 @@ func (k *Keys) Insert(key *types.Key) error {
 		return fmt.Errorf("Error while inserting new key: %w", err)
 	}
 	return nil
-}
-
-func (k *Keys) CountByOwnerId(userId string) (int, error) {
-	count := 0
-	err := k.db.QueryRowx("select count(*) from keys where user_id=$1", userId).Scan(&count)
-	if err != nil {
-		return 0, fmt.Errorf("Error while counting keys by owner id: %w", err)
-	}
-	return count, nil
 }
 
 func (k *Keys) GetByPrefix(prefix string) (*types.Key, error) {
@@ -75,8 +66,8 @@ func (k *Keys) GetByUserId(id string) ([]types.Key, error) {
 	return data, nil
 }
 
-func (k *Keys) Delete(prefix, userId string) error {
-	_, err := k.db.Exec("delete from keys where prefix=$1 and user_id=$2", prefix, userId)
+func (k *Keys) Delete(tx *sqlx.Tx, userId string) error {
+	_, err := tx.Exec("delete from keys where user_id=$1", userId)
 	if err != nil {
 		return fmt.Errorf("Error while deleting key: %w", err)
 	}

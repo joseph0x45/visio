@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/jmoiron/sqlx"
+	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"math/rand"
 	"net/http"
@@ -11,24 +14,18 @@ import (
 	"visio/internal/store"
 	"visio/internal/types"
 	"visio/pkg"
-
-	"github.com/go-chi/chi/v5"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/oklog/ulid/v2"
-)
-
-const (
-	KeyLimit = 5
 )
 
 type KeyHandler struct {
+	db       *sqlx.DB
 	keys     *store.Keys
 	logger   *slog.Logger
 	sessions *store.Sessions
 }
 
-func NewKeyHandler(keysStore *store.Keys, sessionsStore *store.Sessions, logger *slog.Logger) *KeyHandler {
+func NewKeyHandler(db *sqlx.DB, keysStore *store.Keys, sessionsStore *store.Sessions, logger *slog.Logger) *KeyHandler {
 	return &KeyHandler{
+		db:       db,
 		keys:     keysStore,
 		sessions: sessionsStore,
 		logger:   logger,
@@ -45,21 +42,27 @@ func generateRandomString(length int) string {
 	return key
 }
 
-func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *KeyHandler) GetNew(w http.ResponseWriter, r *http.Request) {
 	log := h.logger.With("requestid", chiMiddleware.GetReqID(r.Context()))
 	currentUser, ok := r.Context().Value("currentUser").(*types.User)
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	keysCount, err := h.keys.CountByOwnerId(currentUser.Id)
+	tx, err := h.db.Beginx()
 	if err != nil {
-		log.Error(err.Error())
+		log.Error(fmt.Sprintf("Error while starting transaction: %s", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if keysCount == KeyLimit {
-		w.WriteHeader(http.StatusForbidden)
+	err = h.keys.Delete(tx, currentUser.Id)
+	if err != nil {
+		log.Error(err.Error())
+		err = tx.Rollback()
+		if err != nil {
+			log.Error(fmt.Sprintf("Error while rolling back transaction: %s", err.Error()))
+		}
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	prefix := generateRandomString(7)
@@ -78,12 +81,16 @@ func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 		KeyHash:      keyHash,
 		CreationDate: time.Now().UTC().Format("January, 2 2006"),
 	}
-	err = h.keys.Insert(newKey)
+	err = h.keys.Insert(newKey, tx)
 	if err != nil {
 		if errors.Is(err, types.ErrDuplicatePrefix) {
 			log.Debug("A duplicate prefix error occured")
 		}
 		log.Error(err.Error())
+		err = tx.Rollback()
+		if err != nil {
+			log.Error(fmt.Sprintf("Error while rolling back transaction: %s", err.Error()))
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -96,33 +103,23 @@ func (h *KeyHandler) Create(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 	if err != nil {
-		//Delete created key and add header to tell client
 		log.Error(err.Error())
+		err = tx.Rollback()
+		if err != nil {
+			log.Error(fmt.Sprintf("Error while rolling back transaction: %s", err.Error()))
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Error(fmt.Sprintf("Error while commiting transaction: %s", err.Error()))
+		err = tx.Rollback()
+		if err != nil {
+			log.Error(fmt.Sprintf("Error while rolling back transaction: %s", err.Error()))
+		}
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write(data)
-	return
-}
-
-func (h *KeyHandler) Revoke(w http.ResponseWriter, r *http.Request) {
-	currentUser, ok := r.Context().Value("currentUser").(*types.User)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	prefix := chi.URLParam(r, "prefix")
-	if prefix == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err := h.keys.Delete(prefix, currentUser.Id)
-	if err != nil {
-		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
 	return
 }

@@ -10,7 +10,6 @@ import (
 	"visio/internal/handlers"
 	"visio/internal/middlewares"
 	"visio/internal/store"
-
 	"github.com/Kagami/go-face"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
@@ -41,7 +40,7 @@ func main() {
 	appLogger := slog.New(textHandler)
 	appHandler := handlers.NewAppHandler(keys, appLogger)
 	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
-	keyHandler := handlers.NewKeyHandler(keys, sessions, appLogger)
+	keyHandler := handlers.NewKeyHandler(postgresPool, keys, sessions, appLogger)
 	recognizer, err := face.NewRecognizer(os.Getenv("MODELS_DIR"))
 	if err != nil {
 		panic(fmt.Sprintf("Error while initializing recognizer: %s", err.Error()))
@@ -75,8 +74,7 @@ func main() {
 
 	r.Route("/keys", func(r chi.Router) {
 		r.With(authMiddleware.CookieAuth).Get("/", appHandler.GetKeysPage)
-		r.With(authMiddleware.CookieAuth).Post("/", keyHandler.Create)
-		r.With(authMiddleware.CookieAuth).Delete("/{prefix}", keyHandler.Revoke)
+		r.With(authMiddleware.CookieAuth).Post("/", keyHandler.GetNew)
 	})
 
 	r.Route("/faces", func(r chi.Router) {
