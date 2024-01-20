@@ -4,7 +4,7 @@
   <title>Visio | Keys</title>
 </head>
 
-<main x-data="init( '{{ .Keys | jsonify }}' )">
+<main >
   <div class="w-full flex flex-col">
     <div class="w-full flex justify-between my-5 items-baseline ">
       <h1 class="text-sm lg:text-xl font-bold">Manage your API keys</h1>
@@ -44,75 +44,4 @@
     </ul>
   </div>
 </main>
-
-<script>
-  function init(keysData) {
-    return {
-      creating_key: false,
-      keys: JSON.parse(keysData),
-      createKey: async function () {
-        this.creating_key = true
-        try {
-          const response = await fetch(
-            `/keys`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              }
-            }
-          )
-          this.creating_key = false
-          const {status} = response
-          switch (status) {
-            case 201:
-              const {data: {naked_key, key_object}} = await response.json()
-              this.keys.push(key_object)
-              alert(`Here is your key "${naked_key}"\nMake sure to copy and store it in a safe place.\nOnce you dismiss this you will not be able to see it again`)
-              break
-            case 401:
-              window.location.href = "/auth"
-              break
-            case 403:
-              alert("You can not create more than 5 keys")
-              window.location.reload()
-              break
-            case 500:
-              alert("Something went wrong. Please retry or contact us")
-          }
-        } catch (err) {
-          alert("Something went wrong. Please retry or contact us")
-          console.log(err)
-        }
-      },
-      revokeKey: async function (keyPrefix) {
-        try {
-          const response = await fetch(
-            `/keys/${keyPrefix}`,
-            {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json"
-              }
-            }
-          )
-          const {status} = response
-          switch (status) {
-            case 200:
-              this.keys = this.keys.filter((key)=>key.prefix!==keyPrefix)
-              break
-            case 401:
-              window.location.href = "/auth"
-              break
-            case 500:
-              alert("Something went wrong. Please retry or contact us")
-          }
-        } catch (err) {
-          console.log(err)
-          alert("Something went wrong. Please retry or contact us")
-        }
-      }
-    }
-  }
-</script>
 {{end}}
