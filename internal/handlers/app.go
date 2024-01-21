@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"html/template"
 	"log/slog"
 	"net/http"
 	"visio/internal/store"
-	"visio/internal/types"
 )
 
 type AppHandler struct {
@@ -24,7 +22,7 @@ func NewAppHandler(keys *store.Keys, logger *slog.Logger) *AppHandler {
 func (h *AppHandler) RenderLandingPage(w http.ResponseWriter, r *http.Request) {
 	templFiles := []string{
 		"views/layouts/base.html",
-		"views/home.html",
+		"views/landing.html",
 	}
 	ts, err := template.ParseFiles(templFiles...)
 	if err != nil {
@@ -59,41 +57,18 @@ func (h *AppHandler) RenderAuthPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *AppHandler) GetKeysPage(w http.ResponseWriter, r *http.Request) {
-	currentUser, ok := r.Context().Value("currentUser").(*types.User)
-	if !ok {
-		http.Redirect(w, r, "/auth", http.StatusTemporaryRedirect)
-		return
-	}
-	userKeys, err := h.keys.GetByUserId(currentUser.Id)
-	if err != nil {
-		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+func (h *AppHandler) RenderHomePage(w http.ResponseWriter, r *http.Request){
 	templateFiles := []string{
-		"views/layouts/app.html",
-		"views/keys.html",
+		"views/layouts/base.html",
+		"views/home.html",
 	}
-
-	ts, err := template.New("").Funcs(template.FuncMap{
-		"jsonify": func(v interface{}) string {
-			b, err := json.Marshal(v)
-			if err != nil {
-				return ""
-			}
-			return string(b)
-		},
-	}).ParseFiles(templateFiles...)
+	ts, err := template.ParseFiles(templateFiles...)
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	templData := map[string]interface{}{
-		"Keys": userKeys,
-	}
-	err = ts.ExecuteTemplate(w, "app", templData)
+	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

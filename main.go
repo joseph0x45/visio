@@ -67,13 +67,13 @@ func main() {
 
 	r.Get("/", appHandler.RenderLandingPage)
 	r.Get("/auth", appHandler.RenderAuthPage)
+	r.Get("/home", appHandler.RenderHomePage)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/auth", authHandler.Authenticate)
 	})
 
 	r.Route("/keys", func(r chi.Router) {
-		r.With(authMiddleware.CookieAuth).Get("/", appHandler.GetKeysPage)
 		r.With(authMiddleware.CookieAuth).Post("/", keyHandler.GetNew)
 	})
 
