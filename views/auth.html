@@ -4,7 +4,7 @@
   <title>Visio | Authenticate</title>
 </head>
 
-<form class="w-full h-screen flex flex-col items-center justify-center">
+<div x-data="init()" class="w-full h-screen flex flex-col items-center justify-center">
   <div class="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-lg text-center">
       <h1 class="text-2xl font-bold sm:text-3xl">Get started today!</h1>
@@ -13,38 +13,90 @@
       <div>
         <label for="email" class="sr-only">Email</label>
         <div class="relative">
-          <input autocomplete="off" type="email" name="email" required
+          <input x-model="email" autocomplete="off" type="email" name="email" required
             class="w-full lg:w-96 rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm" placeholder="Enter email" />
         </div>
       </div>
       <div>
         <label for="password" class="sr-only">Password</label>
         <div class="relative">
-          <input type="password" name="password" required
+          <input x-model="password" type="password" required
             class="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm" placeholder="Enter password" />
         </div>
       </div>
       <div class="flex items-center justify-between">
-        <p class="text-sm text-gray-500 flex">
-          <button _="
-            on click 
-              if #action_button.innerText is 'Login' 
-                set my.innerText to 'Login instead'
-                set #action_button.innerText to 'Register'
-              else
-                set my.innerText to 'Register instead'
-                set #action_button.innerText to 'Login'
-            " class="flex underline" type="button">
-            Register instead
+        <p class="text-sm text-gray-500">
+          <button class="flex" @click="switchAction($data)" type="button">
+            <h1 class="underline" x-text="alternateAction"></h1>
           </button>
         </p>
-        <button id="action_button" type="submit"
-          _="on click toggle @disabled until htmx:afterOnLoad"
-          class="inline-block w-32 rounded-lg bg-black px-5 py-3 text-sm font-medium text-white">
-          Login
+        <button x-text="action" x-bind:disabled="loading" type="button" @click="authenticate($data)"
+          class="inline-block rounded-lg bg-black px-5 py-3 text-sm font-medium text-white">
         </button>
       </div>
+      <h1 class="text-red-400 text-center" x-text="errorText"></h1>
     </div>
   </div>
-</form>
+</div>
+
+<script>
+  function init() {
+    return {
+      loading: false,
+      email: "",
+      password: "",
+      action: "Login",
+      alternateAction: "No account? Register",
+      errorText: "",
+      switchAction: function () {
+        if (this.action == "Login") {
+          this.action = "Register"
+          this.alternateAction = "Got an account? Login"
+          return
+        }
+        if (this.action == "Register") {
+          this.action = "Login"
+          this.alternateAction = "No account? Register"
+          return
+        }
+      },
+      authenticate: async function ({email, password, action}) {
+        if (email == '' || password == '') {
+          return
+        }
+        const data = JSON.stringify({email, password})
+        console.log(data)
+        const response = await fetch(
+          `/api/auth?action=${action}`,
+          {
+            method: "POST",
+            body: data,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+        statusCode = response.status
+        switch (statusCode) {
+          case 400:
+            this.errorText = "Bad credentials"
+            return
+          case 409:
+            this.errorText = "This email is already in use"
+            return
+          case 500:
+            this.errorText = "Something went wrong. Please try again"
+            return
+          case 201:
+            window.location.href = "/keys"
+          case 200:
+            window.location.href = "/keys"
+          default:
+            this.errorText = "Something went wrong. Please try again"
+            return
+        }
+      }
+    }
+  }
+</script>
 {{end}}
