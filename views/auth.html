@@ -1,4 +1,5 @@
 {{define "main"}}
+
 <head>
   <title>Visio | Authenticate</title>
 </head>
@@ -33,6 +34,7 @@
           class="inline-block rounded-lg bg-black px-5 py-3 text-sm font-medium text-white">
         </button>
       </div>
+      <h1 class="text-red-400 text-center" x-text="errorText"></h1>
     </div>
   </div>
 </div>
@@ -45,6 +47,7 @@
       password: "",
       action: "Login",
       alternateAction: "No account? Register",
+      errorText: "",
       switchAction: function () {
         if (this.action == "Login") {
           this.action = "Register"
@@ -57,11 +60,11 @@
           return
         }
       },
-      authenticate: async function ({ email, password, action }) {
+      authenticate: async function ({email, password, action}) {
         if (email == '' || password == '') {
           return
         }
-        const data = JSON.stringify({ email, password })
+        const data = JSON.stringify({email, password})
         console.log(data)
         const response = await fetch(
           `/api/auth?action=${action}`,
@@ -76,17 +79,19 @@
         statusCode = response.status
         switch (statusCode) {
           case 400:
-            alert("Wrong credentials")
+            this.errorText = "Bad credentials"
+            return
+          case 409:
+            this.errorText = "This email is already in use"
             return
           case 500:
-            alert("Something went wrong! Try again or contact support")
+            this.errorText = "Something went wrong. Please try again"
             return
           case 201:
-            window.location.href = "/keys"
+            window.location.href = "/home"
+            return
           case 200:
-            window.location.href = "/keys"
-          default:
-            alert("Something went wrong! Try again or contact support")
+            window.location.href = "/home"
             return
         }
       }
