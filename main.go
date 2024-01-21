@@ -3,6 +3,10 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/Kagami/go-face"
+	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,10 +14,6 @@ import (
 	"visio/internal/handlers"
 	"visio/internal/middlewares"
 	"visio/internal/store"
-	"github.com/Kagami/go-face"
-	"github.com/go-chi/chi/v5"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/joho/godotenv"
 )
 
 //go:embed views/*
@@ -38,9 +38,8 @@ func main() {
 	faces := store.NewFacesStore(postgresPool)
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	appLogger := slog.New(textHandler)
-	appHandler := handlers.NewAppHandler(keys, appLogger)
+	appHandler := handlers.NewAppHandler(users, keys, appLogger)
 	authHandler := handlers.NewAuthHandler(users, sessions, appLogger)
-	keyHandler := handlers.NewKeyHandler(postgresPool, keys, sessions, appLogger)
 	recognizer, err := face.NewRecognizer(os.Getenv("MODELS_DIR"))
 	if err != nil {
 		panic(fmt.Sprintf("Error while initializing recognizer: %s", err.Error()))
@@ -67,14 +66,10 @@ func main() {
 
 	r.Get("/", appHandler.RenderLandingPage)
 	r.Get("/auth", appHandler.RenderAuthPage)
-	r.Get("/home", appHandler.RenderHomePage)
+	r.With(authMiddleware.CookieAuth).Get("/home", appHandler.RenderHomePage)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/auth", authHandler.Authenticate)
-	})
-
-	r.Route("/keys", func(r chi.Router) {
-		r.With(authMiddleware.CookieAuth).Post("/", keyHandler.GetNew)
 	})
 
 	r.Route("/faces", func(r chi.Router) {

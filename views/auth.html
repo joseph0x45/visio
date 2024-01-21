@@ -88,11 +88,10 @@
             this.errorText = "Something went wrong. Please try again"
             return
           case 201:
-            window.location.href = "/keys"
+            window.location.href = "/home"
+            return
           case 200:
-            window.location.href = "/keys"
-          default:
-            this.errorText = "Something went wrong. Please try again"
+            window.location.href = "/home"
             return
         }
       }

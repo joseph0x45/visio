@@ -18,8 +18,8 @@ func NewKeysStore(db *sqlx.DB) *Keys {
 	}
 }
 
-func (k *Keys) Insert(key *types.Key, tx *sqlx.Tx) error {
-	_, err := tx.NamedExec(
+func (k *Keys) Insert(key *types.Key) error {
+	_, err := k.db.NamedExec(
 		`
       insert into keys(id, user_id, prefix, key_hash, creation_date)
       values (:id, :user_id, :prefix, :key_hash, :creation_date)
@@ -53,17 +53,20 @@ func (k *Keys) GetByPrefix(prefix string) (*types.Key, error) {
 	return key, nil
 }
 
-func (k *Keys) GetByUserId(id string) ([]types.Key, error) {
-	data := []types.Key{}
-	err := k.db.Select(
-		&data,
+func (k *Keys) GetByUserId(id string) (*types.Key, error) {
+	key := new(types.Key)
+	err := k.db.Get(
+		key,
 		`select * from keys where user_id=$1`,
 		id,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("Error while retrieving keys from database: %w", err)
+		if err == sql.ErrNoRows {
+			return nil, types.ErrKeyNotFound
+		}
+		return nil, fmt.Errorf("Error while retrieving key from database: %w", err)
 	}
-	return data, nil
+	return key, nil
 }
 
 func (k *Keys) Delete(tx *sqlx.Tx, userId string) error {
