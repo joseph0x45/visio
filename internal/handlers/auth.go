@@ -78,6 +78,7 @@ func (h *AuthHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 			Name:  "session",
 			Value: sessionId,
 			Path:  "/",
+      SameSite: http.SameSiteNoneMode,
 		}
 		http.SetCookie(w, authCookie)
 		w.WriteHeader(http.StatusCreated)
@@ -103,6 +104,7 @@ func (h *AuthHandler) Authenticate(w http.ResponseWriter, r *http.Request) {
 			Name:  "session",
 			Value: sessionId,
 			Path:  "/",
+      SameSite: http.SameSiteNoneMode,
 		}
 		http.SetCookie(w, authCookie)
 		w.WriteHeader(http.StatusOK)
