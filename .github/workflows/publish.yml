@@ -24,6 +24,13 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: thewisepigeon/visio
+
+      - name: Download models
+        run: |
+          mkdir models
+          wget -P models -O https://github.com/Kagami/go-face-testdata/raw/master/models/shape_predictor_5_face_landmarks.dat
+          wget -P models -O https://github.com/Kagami/go-face-testdata/raw/master/models/dlib_face_recognition_resnet_model_v1.dat
+          wget -P models -O https://github.com/Kagami/go-face-testdata/raw/master/models/mmod_human_face_detector.dat
       
       - name: Build and push Docker image
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
