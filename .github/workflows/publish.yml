@@ -32,10 +32,12 @@ jobs:
           wget -P models -O dlib_face_recognition_resnet_model_v1.dat https://github.com/Kagami/go-face-testdata/raw/master/models/dlib_face_recognition_resnet_model_v1.dat
           wget -P models -O mmod_human_face_detector.dat https://github.com/Kagami/go-face-testdata/raw/master/models/mmod_human_face_detector.dat
 
-      - name: Setup node and install dependencies
+      - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 18
+
+      - name: Install dependencies
         run: npm ci
 
       - name: Compile tailwind
