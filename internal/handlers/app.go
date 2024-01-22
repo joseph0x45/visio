@@ -108,7 +108,7 @@ func (h *AppHandler) RenderHomePage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	data := map[string]any{
-		"NewKey":  !userHasKey,
+		"NewKey":   !userHasKey,
 		"NakedKey": nakedKey,
 		"Prefix":   userKey.Prefix,
 	}
@@ -128,4 +128,20 @@ func (h *AppHandler) RenderHomePage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *AppHandler) RevokeKey(w http.ResponseWriter, r *http.Request) {
+	currentUser, ok := r.Context().Value("currentUser").(*types.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	err := h.keys.Delete(currentUser.Id)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	return
 }
