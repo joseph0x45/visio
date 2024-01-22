@@ -23,7 +23,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: thewisepigeon/visio
+          images: thewisepigeon/visio:latest
 
       - name: Download models
         run: |
@@ -31,6 +31,12 @@ jobs:
           wget -P models -O shape_predictor_5_face_landmarks.dat https://github.com/Kagami/go-face-testdata/raw/master/models/shape_predictor_5_face_landmarks.dat
           wget -P models -O dlib_face_recognition_resnet_model_v1.dat https://github.com/Kagami/go-face-testdata/raw/master/models/dlib_face_recognition_resnet_model_v1.dat
           wget -P models -O mmod_human_face_detector.dat https://github.com/Kagami/go-face-testdata/raw/master/models/mmod_human_face_detector.dat
+
+      - name: Setup node and install dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+        run: npm ci
 
       - name: Compile tailwind
         run: |
