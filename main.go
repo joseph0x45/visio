@@ -72,6 +72,8 @@ func main() {
 		r.Post("/auth", authHandler.Authenticate)
 	})
 
+  r.With(authMiddleware.CookieAuth).Delete("/keys", appHandler.RevokeKey)
+
 	r.Route("/faces", func(r chi.Router) {
 		r.With(authMiddleware.KeyAuth).With(uploadMiddleware.HandleUploads(1)).Post("/", faceHandler.SaveFace)
 		r.With(authMiddleware.KeyAuth).Delete("/{id}", faceHandler.DeleteFace)

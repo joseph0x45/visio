@@ -69,8 +69,8 @@ func (k *Keys) GetByUserId(id string) (*types.Key, error) {
 	return key, nil
 }
 
-func (k *Keys) Delete(tx *sqlx.Tx, userId string) error {
-	_, err := tx.Exec("delete from keys where user_id=$1", userId)
+func (k *Keys) Delete(userId string) error {
+  _, err := k.db.Exec("delete from keys where user_id=$1", userId)
 	if err != nil {
 		return fmt.Errorf("Error while deleting key: %w", err)
 	}
