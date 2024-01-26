@@ -84,11 +84,28 @@ func TestMain(m *testing.M) {
 func migrateTestDB(db *sqlx.DB) error {
 	q := `
 create table if not exists users (
-	id text not null primary key,
-	email text not null unique,
-	password_hash text not null,
-	signup_date text not null
-);`
+  id text not null primary key,
+  email text not null unique,
+  password_hash text not null,
+  signup_date text not null
+);
+
+create table if not exists keys (
+  id text not null primary key,
+  user_id text not null references users(id) on delete cascade,
+  prefix text not null unique,
+  key_hash text not null,
+  creation_date text not null
+);
+
+create table if not exists faces (
+  id text not null primary key,
+  label text not null,
+  user_id text not null references users(id) on delete cascade,
+  descriptor text not null,
+  unique (label, user_id)
+);
+`
 	_, err := db.Exec(q)
 	return err
 }
@@ -118,7 +135,10 @@ func TestUsers_Insert(t *testing.T) {
 		// https://www.postgresql.org/docs/current/errcodes-appendix.html
 		require.Equal(t, "unique_violation", pqErr.Code.Name())
 
-		testDB.Exec("TRUNCATE users;")
+		testDB.Exec("delete from users cascade;")
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	})
 
 	t.Run("success", func(t *testing.T) {
@@ -138,7 +158,7 @@ func TestUsers_Insert(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		testDB.Exec("TRUNCATE users;")
+		testDB.Exec("delete from users cascade;")
 	})
 }
 
@@ -150,7 +170,7 @@ func TestUsers_GetById(t *testing.T) {
 		require.Nil(t, user)
 		require.Equal(t, err, types.ErrUserNotFound)
 
-		testDB.Exec("TRUNCATE users;")
+		testDB.Exec("delete from users cascade;")
 	})
 
 	t.Run("user exists", func(t *testing.T) {
@@ -170,7 +190,7 @@ func TestUsers_GetById(t *testing.T) {
 		require.Equal(t, user.SignupDate, existingUser.SignupDate)
 		require.NoError(t, err)
 
-		testDB.Exec("TRUNCATE users;")
+		testDB.Exec("delete from users cascade;")
 	})
 }
 
@@ -182,7 +202,7 @@ func TestUsers_GetByEmail(t *testing.T) {
 		require.Nil(t, user)
 		require.Equal(t, err, types.ErrUserNotFound)
 
-		testDB.Exec("TRUNCATE users;")
+		testDB.Exec("delete from users cascade;")
 	})
 
 	t.Run("user exists", func(t *testing.T) {
@@ -202,6 +222,6 @@ func TestUsers_GetByEmail(t *testing.T) {
 		require.Equal(t, user.SignupDate, existingUser.SignupDate)
 		require.NoError(t, err)
 
-		testDB.Exec("TRUNCATE users;")
+		testDB.Exec("delete from users cascade;")
 	})
 }
