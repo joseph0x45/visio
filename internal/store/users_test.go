@@ -3,17 +3,16 @@ package store
 import (
 	"errors"
 	"fmt"
-	"log"
-	"os"
-	"testing"
-	"time"
-	"visio/internal/types"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/require"
+	"log"
+	"os"
+	"testing"
+	"time"
+	"visio/internal/types"
 )
 
 const (
@@ -82,9 +81,6 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// TODO: As an improvement, we might consider to use a migration folder
-//
-// github.com/golang-migrate/migrate
 func migrateTestDB(db *sqlx.DB) error {
 	q := `
 create table if not exists users (
