@@ -6,6 +6,7 @@ import (
 	"github.com/Kagami/go-face"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
@@ -49,6 +50,14 @@ func main() {
 	uploadMiddleware := middlewares.NewUploadMiddleware(appLogger)
 
 	r := chi.NewRouter()
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 	r.Use(chiMiddleware.RequestID)
 
 	r.Get("/public/output.css", func(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +81,7 @@ func main() {
 		r.Post("/auth", authHandler.Authenticate)
 	})
 
-  r.With(authMiddleware.CookieAuth).Delete("/keys", appHandler.RevokeKey)
+	r.With(authMiddleware.CookieAuth).Delete("/keys", appHandler.RevokeKey)
 
 	r.Route("/faces", func(r chi.Router) {
 		r.With(authMiddleware.KeyAuth).With(uploadMiddleware.HandleUploads(1)).Post("/", faceHandler.SaveFace)

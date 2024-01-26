@@ -1,9 +1,15 @@
 package store
 
 import (
+	"os"
 	"testing"
 	"visio/internal/database"
 )
+
+func SessionsMain(m *testing.M) {
+	code := m.Run()
+	os.Exit(code)
+}
 
 func TestSession(t *testing.T) {
 	sessionManager := database.NewSessionManager()
