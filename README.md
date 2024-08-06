@@ -1,7 +1,5 @@
 ![logo](https://github.com/TheWisePigeon/visio/assets/95161388/de1bc44d-d238-4742-903e-c744c9931d5c)
 
-## VISIO IS CURRENTLY BEING REWRITTEN. JOIN THE [Discord](https://discord.gg/9vDumSjK3F) TO STAY UP TO DATE
-
 ## Introduction
 Visio is an opensource cloud based service that provides algorithms for face detection and recognition. 
 
