@@ -18,7 +18,7 @@ import (
 )
 
 //go:embed views/*
-var views embed.FS
+var viewss embed.FS
 
 //go:embed public/output.css
 var publicFS embed.FS
