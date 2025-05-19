@@ -38,3 +38,4 @@ The project uses tailwindcss so you will also need to run `npm install` and star
 If you do not have `make` you can always run it with `npx tailwindcss -i ./assets/app.css -o ./public/output.css --minify --watch`
 
 If you have any issues while setting it up locally join the [Discord](https://discord.gg/9vDumSjK3F) and I will be happy to help :)
+blabla
